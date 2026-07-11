@@ -1,19 +1,24 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
   TextInput,
   TextArea,
   Select,
   SelectItem,
   Button,
-  InlineNotification
+  InlineNotification,
+  Loading
 } from '@carbon/react';
-import { ArrowLeft } from '@carbon/icons-react';
+import { ArrowLeft, TrashCan } from '@carbon/icons-react';
 
-export default function CreateAgentPage() {
+export default function EditAgentPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const id = params.id as string;
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
@@ -23,27 +28,66 @@ export default function CreateAgentPage() {
     voiceId: 'default-voice'
   });
 
+  useEffect(() => {
+    const fetchAgent = async () => {
+      try {
+        const res = await fetch('/api/Agents');
+        if (!res.ok) throw new Error('Failed to fetch agents');
+        const data = await res.json();
+        const agent = data.find((a: any) => a.id === id);
+        if (!agent) throw new Error('Agent not found');
+        
+        setFormData({
+          name: agent.name,
+          promptContext: agent.promptContext,
+          welcomeMessage: agent.welcomeMessage || '',
+          voiceId: agent.voiceId
+        });
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAgent();
+  }, [id]);
+
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     try {
-      const res = await fetch('/api/Agents', {
-        method: 'POST',
+      const res = await fetch(`/api/Agents/${id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      if (!res.ok) throw new Error('Failed to create agent');
+      if (!res.ok) throw new Error('Failed to update agent');
       router.push('/agents');
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this agent?')) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/Agents/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete agent');
+      router.push('/agents');
+    } catch (err: any) {
+      setError(err.message);
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <Loading description="Loading agent" withOverlay={false} />;
 
   return (
     <div style={{ padding: '2rem', maxWidth: '800px' }}>
@@ -56,7 +100,12 @@ export default function CreateAgentPage() {
         Back to Agents
       </Button>
 
-      <h1 style={{ fontSize: '2rem', fontWeight: 300, marginBottom: '2rem' }}>Create AI Agent</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 300 }}>Edit AI Agent</h1>
+        <Button kind="danger" renderIcon={TrashCan} onClick={handleDelete} disabled={saving}>
+          Delete Agent
+        </Button>
+      </div>
 
       {error && <InlineNotification kind="error" title="Error" subtitle={error} style={{ marginBottom: '2rem' }} />}
 
@@ -65,7 +114,6 @@ export default function CreateAgentPage() {
           id="agent-name"
           name="name"
           labelText="Agent Name"
-          placeholder="e.g. Sales Representative"
           value={formData.name}
           onChange={handleChange}
           required
@@ -75,8 +123,6 @@ export default function CreateAgentPage() {
           id="agent-prompt"
           name="promptContext"
           labelText="System Prompt / Persona"
-          helperText="Define how the AI should behave, what its goals are, and how it should respond."
-          placeholder="You are a helpful sales representative for..."
           rows={6}
           value={formData.promptContext}
           onChange={handleChange}
@@ -87,8 +133,6 @@ export default function CreateAgentPage() {
           id="agent-welcome"
           name="welcomeMessage"
           labelText="Welcome Message (Optional)"
-          helperText="The first thing the AI will say when the user connects."
-          placeholder="Hello! How can I help you today?"
           value={formData.welcomeMessage}
           onChange={handleChange}
         />
@@ -106,8 +150,8 @@ export default function CreateAgentPage() {
         </Select>
 
         <div style={{ marginTop: '1rem' }}>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Agent'}
+          <Button type="submit" disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </form>

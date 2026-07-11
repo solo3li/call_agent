@@ -10,6 +10,7 @@ namespace backend.Data
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<AiAgent> Agents { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +25,11 @@ namespace backend.Data
                 .HasMany(t => t.Users)
                 .WithOne(u => u.Tenant)
                 .HasForeignKey(u => u.TenantId);
+                
+            modelBuilder.Entity<Tenant>()
+                .HasMany(t => t.ApiKeys)
+                .WithOne(k => k.Tenant)
+                .HasForeignKey(k => k.TenantId);
         }
     }
 }

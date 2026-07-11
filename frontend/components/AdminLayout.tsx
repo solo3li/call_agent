@@ -10,7 +10,7 @@ import {
   SideNavLink,
   Content
 } from '@carbon/react';
-import { Dashboard, Api, Code, UserSpeaker } from '@carbon/icons-react';
+import { Dashboard, Api, Code, UserSpeaker, Phone, PhoneBlock } from '@carbon/icons-react';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -51,10 +51,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </Header>
       <SideNav aria-label="Side navigation" expanded={true} isFixedNav>
         <SideNavItems>
-          <SideNavLink renderIcon={Dashboard} as={Link} href="/">Dashboard</SideNavLink>
-          <SideNavLink renderIcon={UserSpeaker} as={Link} href="/agents/new">Agents</SideNavLink>
-          <SideNavLink renderIcon={Api} as={Link} href="/api-keys">API Keys</SideNavLink>
-          <SideNavLink renderIcon={Code} as={Link} href="/webhooks">Webhooks</SideNavLink>
+          <SideNavLink renderIcon={Dashboard} as={Link} href="/" isActive={pathname === '/'}>Dashboard</SideNavLink>
+          <SideNavLink renderIcon={UserSpeaker} as={Link} href="/agents" isActive={pathname.startsWith('/agents')}>AI Agents</SideNavLink>
+          <SideNavLink renderIcon={Phone} as={Link} href="/telecom" isActive={pathname.startsWith('/telecom')}>Phone Numbers</SideNavLink>
+          <SideNavLink renderIcon={PhoneBlock} as={Link} href="/calls" isActive={pathname.startsWith('/calls')}>Call Logs</SideNavLink>
+          <SideNavLink renderIcon={Api} as={Link} href="/api-keys" isActive={pathname.startsWith('/api-keys')}>API Keys</SideNavLink>
+          <SideNavLink renderIcon={Code} as={Link} href="/webhooks" isActive={pathname.startsWith('/webhooks')}>Webhooks</SideNavLink>
           
           <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #393939' }}>
             <SideNavLink onClick={handleLogout} style={{ cursor: 'pointer', color: '#da1e28' }}>

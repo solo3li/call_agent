@@ -10,7 +10,9 @@ namespace backend.Models
         public string? SubscriptionPlan { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
-        public ICollection<AiAgent> Agents { get; set; } = new List<AiAgent>();
+        // Navigation properties
         public ICollection<User> Users { get; set; } = new List<User>();
+        public ICollection<AiAgent> Agents { get; set; } = new List<AiAgent>();
+        public ICollection<ApiKey> ApiKeys { get; set; } = new List<ApiKey>();
     }
 }

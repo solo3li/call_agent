@@ -45,5 +45,41 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAgents), new { id = agent.Id }, agent);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAgent(Guid id, AiAgent agentUpdates)
+        {
+            var tenantIdStr = User.FindFirstValue("TenantId");
+            if (!Guid.TryParse(tenantIdStr, out var tenantId))
+                return Unauthorized();
+
+            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == id && a.TenantId == tenantId);
+            if (agent == null)
+                return NotFound();
+
+            agent.Name = agentUpdates.Name;
+            agent.PromptContext = agentUpdates.PromptContext;
+            agent.WelcomeMessage = agentUpdates.WelcomeMessage;
+            agent.VoiceId = agentUpdates.VoiceId;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAgent(Guid id)
+        {
+            var tenantIdStr = User.FindFirstValue("TenantId");
+            if (!Guid.TryParse(tenantIdStr, out var tenantId))
+                return Unauthorized();
+
+            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == id && a.TenantId == tenantId);
+            if (agent == null)
+                return NotFound();
+
+            _context.Agents.Remove(agent);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

@@ -1,0 +1,85 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 170B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:20-alpine
+#2 DONE 0.4s
+
+#3 [1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#3 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.1s done
+#3 DONE 0.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 70B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 329.00kB 0.0s done
+#5 DONE 0.1s
+
+#6 [4/6] RUN npm install
+#6 CACHED
+
+#7 [5/6] COPY . .
+#7 DONE 0.2s
+
+#8 [6/6] RUN npm run build
+#8 1.107 
+#8 1.107 > frontend@0.1.0 build
+#8 1.107 > next build
+#8 1.107 
+#8 3.407 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#8 3.407 This information is used to shape Next.js' roadmap and prioritize features.
+#8 3.407 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#8 3.407 https://nextjs.org/telemetry
+#8 3.407 
+#8 3.472 ▲ Next.js 16.2.10 (Turbopack)
+#8 3.473 
+#8 3.688 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+#8 3.805   Creating an optimized production build ...
+#8 39.87 ✓ Compiled successfully in 35.4s
+#8 39.91   Running TypeScript ...
+#8 48.59   Finished TypeScript in 8.7s ...
+#8 48.61   Collecting page data using 3 workers ...
+#8 49.74   Generating static pages using 3 workers (0/10) ...
+#8 50.57   Generating static pages using 3 workers (2/10) 
+#8 50.57   Generating static pages using 3 workers (4/10) 
+#8 50.58   Generating static pages using 3 workers (7/10) 
+#8 50.68 ✓ Generating static pages using 3 workers (10#11 50.57   Ge#8 50.70   Finalizing page optimization ...
+#8 50.73 
+#8 50.74 Route (app)
+#8 50.74 ┌ ○ /
+#8 50.74 ├ ○ /_not-found
+#8 50.74 ├ ○ /agents
+#8 50.74 ├ ƒ /agents/[id]
+#8 50.74 ├ ○ /agents/new
+#8 50.74 ├ ○ /api-keys
+#8 50.74 ├ ○ /login
+#8 50.74 ├ ○ /register
+#8 50.74 └ ○ /webhooks
+#8 50.74 
+#8 50.74 
+#8 50.74 ƒ Proxy (Middleware)
+#8 50.74 
+#8 50.74 ○  (Static)   prerendered as static content
+#8 50.74 ƒ  (Dynamic)  server-rendered on demand
+#8 50.74 
+#8 DONE 51.1s
+
+#9 exporting to image
+#9 exporting layers
+#9 exporting layers 1.4s done
+#9 exporting manifest sha256:f767cb85887e6c089dc1e008cb6b813540695ad6499107e5fa10a1234074407c 0.0s done
+#9 exporting config sha256:f0e10532531f31906832b015c501627e5cee4d5ea9ed12994233edfa6ad2243d 0.0s d#12 exporting manifest sha256:f767cb85887e6c089dc1e008cb6b813540695ad6499107e5fa10a1234074407c 0.1s done
+#12 e#9 exporting attestation manifest sha256:4e8420629432d0745b4fcafb9fbf1f06a5a0cb118c04cc17d4cc88b6bc0da011 0.1s done
+#9 exporting manifest list sha256:37629121d6c44115de5fd3c055ac8dde3b621e9421ea7c740f5ccc5#12 exporting attestation manifest sha256:1082850276be837bcfd609b62d002e0#9 naming to docker.io/library/cpaas-frontend:latest 0.0s done
+#9 unpacking to docker.io/library/cpaas-frontend:latest
+#9 unpacking to docker.io/library/cpaas-frontend:latest 0.4s done
+#9 DONE 2.1s
+nd:latest
+#12 naming to docker.io/library/cpaas-frontend:latest done
+#12 unpacking to docker.io/library/cpaas-frontend:latest
+#12 unpacking to docker.io/library/cpaas-frontend:latest 0.4s done
+#12 DONE 2.2s
