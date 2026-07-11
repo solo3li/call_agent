@@ -7,7 +7,7 @@ export default function Dashboard() {
   const [agentsCount, setAgentsCount] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:5001/api/agents')
+    fetch('/api/agents')
       .then(res => res.json())
       .then(data => setAgentsCount(data.length))
       .catch(err => console.error('Error fetching agents:', err));
