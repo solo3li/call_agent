@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-backend
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.backend.port }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}-backend-tls
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # Route /api and /scalar to backend
+    - match: Host(`{{ .Values.domain }}`) && (PathPrefix(`/api`) || PathPrefix(`/scalar`) || PathPrefix(`/swagger`))
+      kind: Rule
+      services:
+        - name: {{ .Release.Name }}-backend
+          port: 80
+  tls:
+    certResolver: letsencrypt
