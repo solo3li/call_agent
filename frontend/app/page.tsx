@@ -1,6 +1,7 @@
 'use client';
 import { Grid, Column, Tile, Button } from '@carbon/react';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const [agentsCount, setAgentsCount] = useState<number | null>(null);
@@ -29,7 +30,7 @@ export default function Dashboard() {
         </Tile>
       </Column>
       <Column lg={16} md={8} sm={4} style={{ marginTop: '2rem' }}>
-        <Button>Create New Agent</Button>
+        <Button as={Link} href="/agents/new">Create New Agent</Button>
       </Column>
     </Grid>
   );

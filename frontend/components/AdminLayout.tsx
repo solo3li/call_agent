@@ -9,7 +9,7 @@ import {
   SideNavLink,
   Content
 } from '@carbon/react';
-import { Dashboard, Api, Code } from '@carbon/icons-react';
+import { Dashboard, Api, Code, UserSpeaker } from '@carbon/icons-react';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -23,6 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <SideNav aria-label="Side navigation" expanded={true} isFixedNav>
         <SideNavItems>
           <SideNavLink renderIcon={Dashboard} as={Link} href="/">Dashboard</SideNavLink>
+          <SideNavLink renderIcon={UserSpeaker} as={Link} href="/agents/new">Agents</SideNavLink>
           <SideNavLink renderIcon={Api} as={Link} href="/api-keys">API Keys</SideNavLink>
           <SideNavLink renderIcon={Code} as={Link} href="/webhooks">Webhooks</SideNavLink>
         </SideNavItems>
