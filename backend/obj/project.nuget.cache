@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "WtQeAQ/vr8fH4SifMptETxa8BUJOQz4WZIKpu+B/9Luoo02mUQMyMM5oRdrVyP9T/vKz0ksM33fHsPIgX0XO9g==",
+  "dgSpecHash": "rUWPMHbBFPRcAz96eQ5X9mf6s4PQQF+Sp+fM+oBfZWq6VeJk1+bVz3l5UKhw7y2OPK+YbqSJI7nLLqSX6RcObg==",
   "success": true,
   "projectFilePath": "/root/call_agent/backend/backend.csproj",
   "expectedPackageFiles": [
@@ -33,6 +33,7 @@
     "/root/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
     "/root/.nuget/packages/npgsql/8.0.6/npgsql.8.0.6.nupkg.sha512",
     "/root/.nuget/packages/npgsql.entityframeworkcore.postgresql/8.0.11/npgsql.entityframeworkcore.postgresql.8.0.11.nupkg.sha512",
+    "/root/.nuget/packages/scalar.aspnetcore/2.16.11/scalar.aspnetcore.2.16.11.nupkg.sha512",
     "/root/.nuget/packages/swashbuckle.aspnetcore/6.6.2/swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
     "/root/.nuget/packages/swashbuckle.aspnetcore.swagger/6.6.2/swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
     "/root/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.6.2/swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
