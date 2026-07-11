@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AdminLayout from "../components/AdminLayout";
 
 export const metadata: Metadata = {
   title: "Omni-Industry Voice AI CPaaS",
-  description: "Admin Panel for Voice AI CPaaS",
+  description: "Developer Console for Voice AI CPaaS",
 };
 
 export default function RootLayout({
@@ -13,7 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AdminLayout>
+            {children}
+        </AdminLayout>
+      </body>
     </html>
   );
 }
