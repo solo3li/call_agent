@@ -14,5 +14,7 @@ namespace backend.Models
         public ICollection<User> Users { get; set; } = new List<User>();
         public ICollection<AiAgent> Agents { get; set; } = new List<AiAgent>();
         public ICollection<ApiKey> ApiKeys { get; set; } = new List<ApiKey>();
+        public ICollection<Webhook> Webhooks { get; set; } = new List<Webhook>();
+        public ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
     }
 }

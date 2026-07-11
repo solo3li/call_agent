@@ -13,5 +13,7 @@ namespace backend.Models
         public string? WelcomeMessage { get; set; }
         public string VoiceId { get; set; } = "default-voice";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        public ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
     }
 }

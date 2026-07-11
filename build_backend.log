@@ -2,66 +2,67 @@
 
 #1 [internal] load build definition from Dockerfile
 #1 transferring dockerfile: 631B done
-#1 DONE 0.1s
+#1 DONE 0.0s
 
-#2 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:8.0
-#2 ...
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:8.0
+#2 DONE 0.1s
 
-#3 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:8.0
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:8.0
 #3 DONE 0.1s
-
-#2 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:8.0
-#2 DONE 0.2s
 
 #4 [internal] load .dockerignore
 #4 transferring context: 79B done
-#4 DONE 0.1s
+#4 DONE 0.0s
 
-#5 [base 1/2] FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:e78fda31142e28746a6908e288e0d40346793f691ca99d8d150bcbe95c0ef035
-#5 resolve mcr.microsoft.com/dotnet/aspnet:8.0@sha256:e78fda31142e28746a6908e288e0d40346793f691ca99d8d150bcbe95c0ef035 0.0s done
-#5 DONE 0.1s
+#5 [internal] load build context
+#5 DONE 0.0s
 
 #6 [build 1/7] FROM mcr.microsoft.com/dotnet/sdk:8.0@sha256:d80fdd84f7e18eea12f8e45c52914f1353395009c95c41197178ea19944e6d48
-#6 resolve mcr.microsoft.com/dotnet/sdk:8.0@sha256:d80fdd84f7e18eea12f8e45c52914f1353395009c95c41197178ea19944e6d48 0.0s done
+#6 resolve mcr.microsoft.com/dotnet/sdk:8.0@sha256:d80fdd84f7e18eea12f8e45c52914f1353395009c95c41197178ea19944e6d48 0.1s done
 #6 DONE 0.1s
 
-#7 [internal] load build context
-#7 transferring context: 1.28kB done
-#7 DONE 0.0s
+#7 [base 1/2] FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:e78fda31142e28746a6908e288e0d40346793f691ca99d8d150bcbe95c0ef035
+#7 resolve mcr.microsoft.com/dotnet/aspnet:8.0@sha256:e78fda31142e28746a6908e288e0d40346793f691ca99d8d150bcbe95c0ef035
+#7 resolve mcr.microsoft.com/dotnet/aspnet:8.0@sha256:e78fda31142e28746a6908e288e0d40346793f691ca99d8d150bcbe95c0ef035 0.1s done
+#7 DONE 0.1s
 
-#8 [build 2/7] WORKDIR /src
+#5 [internal] load build context
+#5 transferring context: 1.60kB done
+#5 DONE 0.0s
+
+#8 [build 3/7] COPY [backend.csproj, .]
 #8 CACHED
 
-#9 [build 3/7] COPY [backend.csproj, .]
+#9 [build 4/7] RUN dotnet restore "./backend.csproj"
 #9 CACHED
 
-#10 [build 4/7] RUN dotnet restore "./backend.csproj"
+#10 [build 5/7] COPY . .
 #10 CACHED
 
-#11 [build 5/7] COPY . .
+#11 [build 2/7] WORKDIR /src
 #11 CACHED
 
 #12 [build 6/7] WORKDIR /src/.
 #12 CACHED
 
 #13 [build 7/7] RUN dotnet build "./backend.csproj" -c Release -o /app/build
-#13 2.754   Determining projects to restore...
-#13 3.969   All projects are up-to-date for restore.
-#13 15.50   backend -> /app/build/backend.dll
-#13 15.56 
-#13 15.56 Build succeeded.
-#13 15.57     0 Warning(s)
-#13 15.57     0 Error(s)
-#13 15.57 
-#13 15.57 Time Elapsed 00:00:14.50
-#13 DONE 15.8s
+#13 2.449   Determining projects to restore...
+#13 3.737   All projects are up-to-date for restore.
+#13 14.40   backend -> /app/build/backend.dll
+#13 14.43 
+#13 14.44 Build succeeded.
+#13 14.44     0 Warning(s)
+#13 14.44     0 Error(s)
+#13 14.44 
+#13 14.44 Time Elapsed 00:00:13.33
+#13 DONE 14.7s
 
 #14 [publish 1/1] RUN dotnet publish "./backend.csproj" -c Release -o /app/publish /p:UseAppHost=false
-#14 2.025   Determining projects to restore...
-#14 3.415   All projects are up-to-date for restore.
-#14 5.196   backend -> /src/bin/Release/net8.0/backend.dll
-#14 5.572   backend -> /app/publish/
-#14 DONE 5.8s
+#14 2.262   Determining projects to restore...
+#14 3.291   All projects are up-to-date for restore.
+#14 4.732   backend -> /src/bin/Release/net8.0/backend.dll
+#14 4.986   backend -> /app/publish/
+#14 DONE 5.1s
 
 #15 [base 2/2] WORKDIR /app
 #15 CACHED
@@ -70,17 +71,23 @@
 #16 CACHED
 
 #17 [final 2/2] COPY --from=publish /app/publish .
-#17 DONE 0.4s
+#17 DONE 0.2s
 
 #18 exporting to image
 #18 exporting layers
-#18 exporting layers 2.9s done
-#18 exporting manifest sha256:8dc425bce5bcf77b189a05767ee438c30ed5a13425b0a79ba77ce3e9d141c720 0.1s done
-#18 exporting config sha256:dee4b785ef79d3fb0062dc15c9b71c31ec7a95281079cbba3f1f0e4f2946820d 0.1s done
-#18 exporting attestation manifest sha256:f946a7d56e3663aa113bb8ad5b34961ca4e6843effc770f44f31a591521ee80c 0.1s done
-#18 exporting manifest list sha256:289f5354503edfedce6b2368317443f390b2602b122ab49a4a01d710bb983600
-#18 exporting manifest list sha256:289f5354503edfedce6b2368317443f390b2602b122ab49a4a01d710bb983600 0.0s done
-#18 naming to docker.io/library/cpaas-backend:latest 0.0s done
+#18 exporting layers 1.5s done
+#18 exporting manifest sha256:a7cbd9f56c0d54a1c8cc383ebd9e2107b7f8c446b2af3d958c625872e6011014
+#18 exporting manifest sha256:a7cbd9f56c0d54a1c8cc383ebd9e2107b7f8c446b2af3d958c625872e6011014 0.0s done
+#18 exporting config sha256:07efc5084ae84373ecdcdddebf5cdcb87e72a94ad8055f612c349a82b52da0d5
+#18 exporting config sha256:07efc5084ae84373ecdcdddebf5cdcb87e72a94ad8055f612c349a82b52da0d5 0.2s done
+#18 exporting attestation manifest sha256:ef81d4041faa2d01004bb808b8a41b1764a81b4dcba0bdb24a05bc06bfaf8294 0.1s done
+#18 exporting manifest list sha256:90a89ff14acd0a4a28968a5f1884856ee52166b5726c74eaa203267e807cc1c1
+#18 exporting manifest list sha256:90a89ff14acd0a4a28968a5f1884856ee52166b5726c74eaa203267e807cc1c1 0.0s done
+#18 naming to docker.io/library/cpaas-backend:latest done
 #18 unpacking to docker.io/library/cpaas-backend:latest
-#18 unpacking to docker.io/library/cpaas-backend:latest 0.3s done
-#18 DONE 3.6s
+#18 unpacking to docker.io/library/cpaas-backend:latest 0.4s done
+#18 DONE 2.4s
+docker.io/library/cpaas backend:latest  	saved	
+application/vnd.oci.image.index.v1+json sha256:90a89ff14acd0a4a28968a5f1884856ee52166b5726c74eaa203267e807cc1c1
+Importing	elapsed: 4.3 s	total:   0.0 B	(0.0 B/s)	
+deployment.apps/cpaas-backend restarted
