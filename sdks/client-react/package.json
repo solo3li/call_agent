@@ -1,0 +1,18 @@
+{
+  "name": "@cpaas/client-react",
+  "version": "1.0.0",
+  "description": "React hooks and components for Voice AI CPaaS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "livekit-client": "^2.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/react": "^18.0.0"
+  }
+}
