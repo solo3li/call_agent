@@ -40,7 +40,7 @@ spec:
     - websecure
   routes:
     # Route /api and /scalar to backend
-    - match: Host(`{{ .Values.domain }}`) && (PathPrefix(`/api`) || PathPrefix(`/scalar`) || PathPrefix(`/swagger`))
+    - match: Host(`{{ .Values.domain }}`) && (PathPrefix(`/api/`) || PathPrefix(`/scalar`) || PathPrefix(`/swagger`))
       kind: Rule
       services:
         - name: {{ .Release.Name }}-backend

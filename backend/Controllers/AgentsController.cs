@@ -27,6 +27,15 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<AiAgent>> CreateAgent(AiAgent agent)
         {
+            var defaultTenant = await _context.Tenants.FirstOrDefaultAsync();
+            if (defaultTenant == null)
+            {
+                defaultTenant = new Tenant { Name = "Default Tenant" };
+                _context.Tenants.Add(defaultTenant);
+                await _context.SaveChangesAsync();
+            }
+            
+            agent.TenantId = defaultTenant.Id;
             _context.Agents.Add(agent);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAgents), new { id = agent.Id }, agent);
