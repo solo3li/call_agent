@@ -12,14 +12,14 @@ backend:
   port: 8080 # ASP.NET default Docker port is 8080 in .NET 8
 
 postgresql:
-  enabled: true
+  enabled: false
   auth:
     username: postgres
     password: postgres
     database: cpaas_db
 
 redis:
-  enabled: true
+  enabled: false
 
 minio:
-  enabled: true
+  enabled: false

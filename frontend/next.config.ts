@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:5001/api/:path*' // Proxy to Backend
+        destination: process.env.NODE_ENV === 'production' 
+          ? 'http://cpaas-backend:80/api/:path*' 
+          : 'http://127.0.0.1:5001/api/:path*' // Proxy to Backend
       }
     ]
   }
