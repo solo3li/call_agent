@@ -1,6 +1,9 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +26,43 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// Configure JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_fallback_key_that_is_at_least_32_bytes_long";
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "cpaas-auth",
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "cpaas-frontend",
+        ValidateLifetime = true
+    };
+    
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.ContainsKey("token"))
+            {
+                context.Token = context.Request.Cookies["token"];
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,6 +74,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

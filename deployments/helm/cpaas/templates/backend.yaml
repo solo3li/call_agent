@@ -30,20 +30,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: {{ .Values.backend.port }}
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: {{ .Release.Name }}-backend-tls
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    # Route /api and /scalar to backend
-    - match: Host(`{{ .Values.domain }}`) && (PathPrefix(`/api/`) || PathPrefix(`/scalar`) || PathPrefix(`/swagger`))
-      kind: Rule
-      services:
-        - name: {{ .Release.Name }}-backend
-          port: 80
-  tls:
-    certResolver: letsencrypt
+

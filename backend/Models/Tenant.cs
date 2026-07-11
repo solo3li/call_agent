@@ -11,5 +11,6 @@ namespace backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public ICollection<AiAgent> Agents { get; set; } = new List<AiAgent>();
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

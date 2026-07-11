@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - {{ .Values.domain }}
+      secretName: {{ .Release.Name }}-tls
+  rules:
+    - host: {{ .Values.domain }}
+      http:
+        paths:
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-backend
+                port:
+                  number: 80
+          - path: /scalar
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-backend
+                port:
+                  number: 80
+          - path: /swagger
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-backend
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-frontend
+                port:
+                  number: 80

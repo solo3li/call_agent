@@ -112,3 +112,12 @@
 /root/call_agent/backend/obj/Debug/net8.0/backend.pdb
 /root/call_agent/backend/obj/Debug/net8.0/backend.genruntimeconfig.cache
 /root/call_agent/backend/obj/Debug/net8.0/ref/backend.dll
+/root/call_agent/backend/bin/Debug/net8.0/BCrypt-Net-Next.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
+/root/call_agent/backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
