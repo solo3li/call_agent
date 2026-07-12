@@ -8,3 +8,4 @@ services:
     restart: always
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ./extensions.conf:/etc/asterisk/extensions.conf:ro

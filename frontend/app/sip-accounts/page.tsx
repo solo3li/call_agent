@@ -64,7 +64,8 @@ export default function SipAccountsPage() {
   };
 
   const headers = [
-    { key: 'username', header: 'Username / Extension' },
+    { key: 'username', header: 'Username' },
+    { key: 'extension', header: 'Extension Number' },
     { key: 'domain', header: 'SIP Domain' },
     { key: 'createdAt', header: 'Created On' }
   ];
@@ -72,6 +73,7 @@ export default function SipAccountsPage() {
   const rows = accounts.map((a: any) => ({
     id: a.id,
     username: a.username,
+    extension: a.username.replace('ext', ''),
     domain: a.domain,
     createdAt: new Date(a.createdAt).toLocaleDateString()
   }));
@@ -121,7 +123,12 @@ export default function SipAccountsPage() {
                 <code style={{ background: '#161616', padding: '0.5rem', borderRadius: '4px', flex: 1 }}>{createdAccount.password}</code>
                 <Button size="sm" kind="ghost" renderIcon={Copy} hasIconOnly iconDescription="Copy Password" onClick={() => navigator.clipboard.writeText(createdAccount.password)} />
               </div>
-              <p style={{ color: '#da1e28', marginTop: '0.5rem', margin: 0 }}>Please copy this password now. It will not be shown again.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <p style={{ width: '130px', margin: 0 }}><strong>Extension Number:</strong></p>
+                <code style={{ background: '#161616', padding: '0.5rem', borderRadius: '4px', flex: 1 }}>{createdAccount.username.replace('ext', '')}</code>
+                <Button size="sm" kind="ghost" renderIcon={Copy} hasIconOnly iconDescription="Copy Extension" onClick={() => navigator.clipboard.writeText(createdAccount.username.replace('ext', ''))} />
+              </div>
+              <p style={{ color: '#da1e28', marginTop: '0.5rem', margin: 0 }}>Please copy this password now. It will not be shown again. You can dial this Extension Number from another MicroSIP account.</p>
             </div>
           </div>
         </div>

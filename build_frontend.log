@@ -1,96 +1,98 @@
 #0 building with "default" instance using docker driver
 
 #1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 170B done
-#1 DONE 0.0s
+#1 transferring dockerfile: 170B 0.0s done
+#1 DONE 0.1s
 
 #2 [internal] load metadata for docker.io/library/node:20-alpine
-#2 DONE 0.4s
+#2 DONE 0.8s
 
 #3 [internal] load .dockerignore
 #3 transferring context: 70B done
 #3 DONE 0.0s
 
-#4 [1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
-#4 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.0s done
+#4 [internal] load build context
 #4 DONE 0.0s
 
-#5 [internal] load build context
-#5 transferring context: 8.61kB done
-#5 DONE 0.0s
+#5 [1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#5 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.1s done
+#5 DONE 0.1s
 
-#6 [3/6] COPY package*.json ./
+#4 [internal] load build context
+#4 transferring context: 9.33kB 0.0s done
+#4 DONE 0.1s
+
+#6 [2/6] WORKDIR /app
 #6 CACHED
 
-#7 [2/6] WORKDIR /app
+#7 [3/6] COPY package*.json ./
 #7 CACHED
 
 #8 [4/6] RUN npm install
 #8 CACHED
 
 #9 [5/6] COPY . .
-#9 DONE 0.1s
+#9 DONE 0.2s
 
 #10 [6/6] RUN npm run build
-#10 0.855 
-#10 0.855 > frontend@0.1.0 build
-#10 0.855 > next build
-#10 0.855 
-#10 2.174 Attention: Next.js now collects completely anonymous telemetry regarding usage.
-#10 2.175 This information is used to shape Next.js' roadmap and prioritize features.
-#10 2.175 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-#10 2.175 https://nextjs.org/telemetry
-#10 2.175 
-#10 2.216 ▲ Next.js 16.2.10 (Turbopack)
-#10 2.217 
-#10 2.380 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-#10 2.476   Creating an optimized production build ...
-#10 18.04 ✓ Compiled successfully in 15.0s
-#10 18.05   Running TypeScript ...
-#10 24.66   Finished TypeScript in 6.6s ...
-#10 24.67   Collecting page data using 3 workers ...
-#10 25.62   Generating static pages using 3 workers (0/13) ...
-#10 26.37   Generating static pages using 3 workers (3/13) 
-#10 26.37   Generating static pages using 3 workers (6/13) 
-#10 26.54   Generating static pages using 3 workers (9/13) 
-#10 26.55 ✓ Generating static pages using 3 workers (13/13) in 928ms
-#10 26.56   Finalizing page optimization ...
-#10 26.58 
-#10 26.58 Route (app)
-#10 26.58 ┌ ○ /
-#10 26.58 ├ ○ /_not-found
-#10 26.58 ├ ○ /agents
-#10 26.58 ├ ƒ /agents/[id]
-#10 26.58 ├ ○ /agents/new
-#10 26.58 ├ ○ /api-keys
-#10 26.58 ├ ○ /calls
-#10 26.58 ├ ○ /login
-#10 26.58 ├ ○ /register
-#10 26.58 ├ ○ /sip-accounts
-#10 26.58 ├ ○ /telecom
-#10 26.58 └ ○ /webhooks
-#10 26.58 
-#10 26.58 
-#10 26.58 ƒ Proxy (Middleware)
-#10 26.58 
-#10 26.58 ○  (Static)   prerendered as static content
-#10 26.58 ƒ  (Dynamic)  server-rendered on demand
-#10 26.58 
-#10 DONE 27.0s
+#10 1.788 
+#10 1.788 > frontend@0.1.0 build
+#10 1.788 > next build
+#10 1.788 
+#10 4.083 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#10 4.084 This information is used to shape Next.js' roadmap and prioritize features.
+#10 4.084 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#10 4.084 https://nextjs.org/telemetry
+#10 4.084 
+#10 4.142 ▲ Next.js 16.2.10 (Turbopack)
+#10 4.142 
+#10 4.324 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+#10 4.445   Creating an optimized production build ...
+#10 29.09 ✓ Compiled successfully in 23.9s
+#10 29.12   Running TypeScript ...
+#10 40.03   Finished TypeScript in 10.9s ...
+#10 40.06   Collecting page data using 3 workers ...
+#10 41.25   Generating static pages using 3 workers (0/13) ...
+#10 42.20   Generating static pages using 3 workers (3/13) 
+#10 42.20   Generating static pages using 3 workers (6/13) 
+#10 42.42   Generating static pages using 3 workers (9/13) 
+#10 42.43 ✓ Generating static pages using 3 workers (13/13) in 1178ms
+#10 42.45   Finalizing page optimization ...
+#10 42.49 
+#10 42.50 Route (app)
+#10 42.50 ┌ ○ /
+#10 42.50 ├ ○ /_not-found
+#10 42.50 ├ ○ /agents
+#10 42.50 ├ ƒ /agents/[id]
+#10 42.50 ├ ○ /agents/new
+#10 42.50 ├ ○ /api-keys
+#10 42.50 ├ ○ /calls
+#10 42.50 ├ ○ /login
+#10 42.50 ├ ○ /register
+#10 42.50 ├ ○ /sip-accounts
+#10 42.50 ├ ○ /telecom
+#10 42.50 └ ○ /webhooks
+#10 42.50 
+#10 42.50 
+#10 42.50 ƒ Proxy (Middleware)
+#10 42.50 
+#10 42.50 ○  (Static)   prerendered as static content
+#10 42.50 ƒ  (Dynamic)  server-rendered on demand
+#10 42.50 
+#10 DONE 43.0s
 
 #11 exporting to image
 #11 exporting layers
-#11 exporting layers 1.2s done
-#11 exporting manifest sha256:633e231e0bdb95d7a16bfefc0fe61359c01c5e2b52bedbf8216371fd069682ba 0.0s done
-#11 exporting config sha256:fb2bb0d6998fcdab17d86007f5a21cf4e5ad760c2a6b697997c5f8e3f681b16f 0.0s done
-#11 exporting attestation manifest sha256:7b7350469a68b63f47cffb809ac17d99a8df459a5750e0786ef3c6bd0c00fa14 0.1s done
-#11 exporting manifest list sha256:419216f809348c188db6aaa644bb368e114c9472ab2f74d621bfc874d80f71ec
-#11 exporting manifest list sha256:419216f809348c188db6aaa644bb368e114c9472ab2f74d621bfc874d80f71ec 0.0s done
+#11 exporting layers 2.2s done
+#11 exporting manifest sha256:143e602acf3519ef681755bc18792bc19ea37584c6602050fe615c3f20a26d83 0.0s done
+#11 exporting config sha256:0134eb7088951aff2bc74858130e83832fdd88cd607bc2e23d5a68e5ae6c09a2 0.1s done
+#11 exporting attestation manifest sha256:bdc2f71342b856cd868a8fe71e41256c94de7a684d062702bcffac1474ed97de 0.1s done
+#11 exporting manifest list sha256:e1ec6174b5a47bfad1e1a84a8725377942364a5b8d47987d44634dccf57c93a7 0.0s done
 #11 naming to docker.io/library/cpaas-frontend:latest done
 #11 unpacking to docker.io/library/cpaas-frontend:latest
-#11 unpacking to docker.io/library/cpaas-frontend:latest 0.3s done
-#11 DONE 1.7s
+#11 unpacking to docker.io/library/cpaas-frontend:latest 0.5s done
+#11 DONE 3.1s
 docker.io/library/cpaas frontend:latest 	saved	
-application/vnd.oci.image.index.v1+json sha256:419216f809348c188db6aaa644bb368e114c9472ab2f74d621bfc874d80f71ec
-Importing	elapsed: 22.7s	total:   0.0 B	(0.0 B/s)	
+application/vnd.oci.image.index.v1+json sha256:e1ec6174b5a47bfad1e1a84a8725377942364a5b8d47987d44634dccf57c93a7
+Importing	elapsed: 33.3s	total:   0.0 B	(0.0 B/s)	
 deployment.apps/cpaas-frontend restarted
