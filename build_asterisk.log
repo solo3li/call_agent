@@ -1,0 +1,45 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 319B 0.0s done
+#1 DONE 1.4s
+
+#2 [internal] load metadata for docker.io/library/alpine:latest
+#2 DONE 1.3s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.1s
+
+#4 [1/5] FROM docker.io/library/alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+#4 resolve docker.io/library/alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b 0.1s done
+#4 DONE 0.2s
+
+#5 [internal] load build context
+#5 transferring context: 1.58kB done
+#5 DONE 0.2s
+
+#6 [2/5] RUN apk add --no-cache asterisk asterisk-curl asterisk-pjproject bash postgresql-client jq
+#6 1.746 ERROR: unable to select packages:
+#6 1.746   asterisk-pjproject (no such package):
+#6 1.746     required by: world[asterisk-pjproject]
+#6 ERROR: process "/bin/sh -c apk add --no-cache asterisk asterisk-curl asterisk-pjproject bash postgresql-client jq" did not complete successfully: exit code: 1
+------
+ > [2/5] RUN apk add --no-cache asterisk asterisk-curl asterisk-pjproject bash postgresql-client jq:
+1.746 ERROR: unable to select packages:
+1.746   asterisk-pjproject (no such package):
+1.746     required by: world[asterisk-pjproject]
+------
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 13)
+Dockerfile:3
+--------------------
+   1 |     FROM alpine:latest
+   2 |     
+   3 | >>> RUN apk add --no-cache asterisk asterisk-curl asterisk-pjproject bash postgresql-client jq
+   4 |     
+   5 |     COPY sync.sh /sync.sh
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c apk add --no-cache asterisk asterisk-curl asterisk-pjproject bash postgresql-client jq" did not complete successfully: exit code: 1

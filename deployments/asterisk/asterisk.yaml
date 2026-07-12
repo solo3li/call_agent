@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asterisk
+  labels:
+    app: asterisk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asterisk
+  template:
+    metadata:
+      labels:
+        app: asterisk
+    spec:
+      containers:
+      - name: asterisk
+        image: asterisk:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5060
+          hostPort: 5060
+          protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asterisk
+spec:
+  selector:
+    app: asterisk
+  ports:
+  - port: 5060
+    targetPort: 5060
+    protocol: UDP

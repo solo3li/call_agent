@@ -14,6 +14,7 @@ namespace backend.Data
         public DbSet<Webhook> Webhooks { get; set; }
         public DbSet<CallRecord> CallRecords { get; set; }
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
+        public DbSet<SipAccount> SipAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +61,11 @@ namespace backend.Data
                 .WithOne(p => p.AiAgent)
                 .HasForeignKey(p => p.AiAgentId)
                 .OnDelete(DeleteBehavior.SetNull); // Unlink phone number when agent is deleted
+                
+            modelBuilder.Entity<Tenant>()
+                .HasMany(t => t.SipAccounts)
+                .WithOne(s => s.Tenant)
+                .HasForeignKey(s => s.TenantId);
         }
     }
 }
