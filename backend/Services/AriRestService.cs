@@ -81,5 +81,57 @@ namespace backend.Services
                 _logger.LogError(ex, "Error hanging up channel {ChannelId}", channelId);
             }
         }
+
+        public async Task<string?> CreateExternalMediaChannelAsync(string app, string externalHost)
+        {
+            try
+            {
+                var content = new StringContent(string.Empty);
+                var url = $"channels/externalMedia?app={app}&external_host={externalHost}&format=ulaw";
+                var response = await _httpClient.PostAsync(url, content);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var channelId = doc.RootElement.GetProperty("id").GetString();
+                    _logger.LogInformation("Created ExternalMedia channel {ChannelId} pointing to {Host}", channelId, externalHost);
+                    return channelId;
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to create external media channel: {Error}", await response.Content.ReadAsStringAsync());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating external media channel");
+            }
+            return null;
+        }
+
+        public async Task BridgeChannelsAsync(string channelId1, string channelId2)
+        {
+            try
+            {
+                // First create a bridge
+                var bridgeResponse = await _httpClient.PostAsync("bridges", new StringContent(string.Empty));
+                if (bridgeResponse.IsSuccessStatusCode)
+                {
+                    var json = await bridgeResponse.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var bridgeId = doc.RootElement.GetProperty("id").GetString();
+
+                    // Then add channels to the bridge
+                    var url = $"bridges/{bridgeId}/addChannel?channel={channelId1},{channelId2}";
+                    await _httpClient.PostAsync(url, new StringContent(string.Empty));
+                    _logger.LogInformation("Bridged channels {C1} and {C2} via bridge {BridgeId}", channelId1, channelId2, bridgeId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error bridging channels");
+            }
+        }
     }
 }

@@ -26,6 +26,11 @@ builder.Services.Configure<backend.Models.AsteriskSettings>(builder.Configuratio
 builder.Services.AddHttpClient<backend.Services.AriRestService>();
 builder.Services.AddHostedService<backend.Services.AriEventService>();
 
+// Configure Alibaba AI Services
+builder.Services.Configure<backend.Models.AlibabaSettings>(builder.Configuration.GetSection("Alibaba"));
+builder.Services.AddTransient<backend.Services.AlibabaOmniClient>();
+builder.Services.AddSingleton<backend.Services.UdpAudioServer>();
+
 // Configure Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>

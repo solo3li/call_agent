@@ -87,12 +87,30 @@ namespace backend.Services
             {
                 using var scope = _serviceProvider.CreateScope();
                 var restService = scope.ServiceProvider.GetRequiredService<AriRestService>();
+                var alibabaClient = scope.ServiceProvider.GetRequiredService<AlibabaOmniClient>();
+                var udpServer = scope.ServiceProvider.GetRequiredService<UdpAudioServer>();
 
                 // 1. Answer the call
                 await restService.AnswerCallAsync(channelId);
 
-                // 2. Play a test sound (built-in asterisk hello-world)
-                await restService.PlayMediaAsync(channelId, "sound:hello-world");
+                // 2. Connect to Alibaba AI
+                var cts = new CancellationTokenSource();
+                await alibabaClient.ConnectAsync(cts.Token);
+
+                // 3. Start UDP Server (e.g. on port 15000)
+                int backendUdpPort = 15000;
+                _ = Task.Run(() => udpServer.StartStreamingAsync(backendUdpPort, alibabaClient, cts.Token));
+
+                // 4. Tell Asterisk to create ExternalMedia channel pointing to our UDP server
+                // Note: 172.17.0.1 is usually the docker host IP, but since Asterisk is on hostNetwork, we can use 127.0.0.1
+                var externalChannelId = await restService.CreateExternalMediaChannelAsync(_settings.AppName, $"127.0.0.1:{backendUdpPort}");
+
+                // 5. Bridge the caller's channel with the ExternalMedia channel
+                if (!string.IsNullOrEmpty(externalChannelId))
+                {
+                    await restService.BridgeChannelsAsync(channelId, externalChannelId);
+                    _logger.LogInformation("Call successfully bridged to AI!");
+                }
             }
         }
     }
