@@ -2,7 +2,6 @@
 
 #1 [internal] load build definition from Dockerfile
 #1 transferring dockerfile: 323B done
-#1 WARN: JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 13)
 #1 DONE 0.0s
 
 #2 [internal] load metadata for docker.io/library/alpine:latest
@@ -14,71 +13,14 @@
 
 #4 [1/5] FROM docker.io/library/alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 #4 resolve docker.io/library/alpine:latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b 0.0s done
-#4 CACHED
+#4 DONE 0.1s
 
 #5 [internal] load build context
-#5 transferring context: 64B done
+#5 transferring context: 1.33kB done
 #5 DONE 0.0s
 
 #6 [2/5] RUN apk add --no-cache asterisk asterisk-sample-config asterisk-curl bash postgresql-client jq
-#6 0.913 ( 1/47) Installing c-client (2007f-r16)
-#6 0.931 ( 2/47) Installing libcap2 (2.78-r0)
-#6 0.935 ( 3/47) Installing brotli-libs (1.2.0-r1)
-#6 0.949 ( 4/47) Installing c-ares (1.34.8-r0)
-#6 0.954 ( 5/47) Installing libunistring (1.4.2-r0)
-#6 0.971 ( 6/47) Installing libidn2 (2.3.8-r0)
-#6 0.975 ( 7/47) Installing nghttp2-libs (1.69.0-r0)
-#6 0.978 ( 8/47) Installing libpsl (0.21.5-r3)
-#6 0.981 ( 9/47) Installing zstd-libs (1.5.7-r2)
-#6 0.990 (10/47) Installing libcurl (8.21.0-r0)
-#6 0.999 (11/47) Installing ncurses-terminfo-base (6.6_p20260516-r0)
-#6 1.006 (12/47) Installing libncursesw (6.6_p20260516-r0)
-#6 1.013 (13/47) Installing libedit (20260508.3.1-r1)
-#6 1.017 (14/47) Installing jansson (2.15.0-r0)
-#6 1.021 (15/47) Installing lua5.1-libs (5.1.5-r13)
-#6 1.025 (16/47) Installing libgcc (15.2.0-r5)
-#6 1.031 (17/47) Installing gsm (1.0.23-r0)
-#6 1.034 (18/47) Installing opus (1.6.1-r0)
-#6 1.045 (19/47) Installing alsa-lib (1.2.15.3-r0)
-#6 1.073 (20/47) Installing dbus-libs (1.16.2-r2)
-#6 1.080 (21/47) Installing libsamplerate (0.2.2-r3)
-#6 1.101 (22/47) Installing libstdc++ (15.2.0-r5)
-#6 1.125 (23/47) Installing jack (1.9.22-r4)
-#6 1.144 (24/47) Installing portaudio (19.7.0-r3)
-#6 1.148 (25/47) Installing speex (1.2.1-r2)
-#6 1.152 (26/47) Installing speexdsp (1.2.1-r2)
-#6 1.156 (27/47) Installing libsrtp (2.7.0-r0)
-#6 1.161 (28/47) Installing pjproject (2.17-r0)
-#6 1.190 (29/47) Installing sqlite-libs (3.53.2-r0)
-#6 1.210 (30/47) Installing libevent (2.1.13-r0)
-#6 1.222 (31/47) Installing hiredis (1.3.0-r0)
-#6 1.225 (32/47) Installing protobuf-c (1.5.2-r2)
-#6 1.228 (33/47) Installing unbound-libs (1.25.1-r0)
-#6 1.243 (34/47) Installing libuuid (2.42.1-r0)
-#6 1.246 (35/47) Installing xz-libs (5.8.3-r0)
-#6 1.253 (36/47) Installing libxml2 (2.13.9-r2)
-#6 1.267 (37/47) Installing asterisk (22.9.0-r0)
-#6 1.276   Executing asterisk-22.9.0-r0.pre-install
-#6 1.504 (38/47) Installing asterisk-curl (22.9.0-r0)
-#6 1.507 (39/47) Installing asterisk-sample-config (22.9.0-r0)
-#6 1.527 (40/47) Installing readline (8.3.3-r1)
-#6 1.532 (41/47) Installing bash (5.3.9-r1)
-#6 1.566   Executing bash-5.3.9-r1.post-install
-#6 1.576 (42/47) Installing oniguruma (6.9.10-r0)
-#6 1.585 (43/47) Installing jq (1.8.1-r0)
-#6 1.592 (44/47) Installing postgresql-common (1.3-r0)
-#6 1.594   Executing postgresql-common-1.3-r0.pre-install
-#6 1.619 (45/47) Installing lz4-libs (1.10.0-r1)
-#6 1.625 (46/47) Installing libpq (18.4-r0)
-#6 1.637 (47/47) Installing postgresql18-client (18.4-r0)
-#6 1.689 Executing busybox-1.37.0-r31.trigger
-#6 1.699 Executing postgresql-common-1.3-r0.trigger
-#6 1.706 * Setting postgresql18 as the default version
-#6 1.823 * find: /usr/share/man: No such file or directory
-#6 1.836 * WARNING: opening from cache https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz: No such file or directory
-#6 1.836 * WARNING: opening from cache https://dl-cdn.alpinelinux.org/alpine/v3.24/community/x86_64/APKINDEX.tar.gz: No such file or directory
-#6 1.847 OK: 50.7 MiB in 63 packages
-#6 DONE 2.2s
+#6 CACHED
 
 #7 [3/5] COPY sync.sh /sync.sh
 #7 DONE 0.1s
@@ -87,24 +29,23 @@
 #8 DONE 0.1s
 
 #9 [5/5] RUN chmod +x /sync.sh
-#9 DONE 0.3s
+#9 DONE 0.4s
 
 #10 exporting to image
 #10 exporting layers
-#10 exporting layers 3.4s done
-#10 exporting manifest sha256:ab5d9862188d7eea4ccc6f939c149e3823ecf5f3b3ca1e850d1d1263b6ac0fb4 0.0s done
-#10 exporting config sha256:ef1becfa4e26a0929dc30675bc04cf6229d7acc85b609488f0a9d62a0480804b 0.0s done
-#10 exporting attestation manifest sha256:91b96c26f95ba31cbaae123883ed5cd65ab5425ddd1bf46023cfca1552ae5a47 0.1s done
-#10 exporting manifest list sha256:7af5c6821bba9f5289e81d3ebc2ddee092fc38a647005d620edf000d721cf240
-#10 exporting manifest list sha256:7af5c6821bba9f5289e81d3ebc2ddee092fc38a647005d620edf000d721cf240 0.0s done
+#10 exporting layers 0.2s done
+#10 exporting manifest sha256:416b7aa3f9d6e3d409546c8293947beb207282e083f9e612d32df3c20d3b77d2 0.0s done
+#10 exporting config sha256:b2ae6e3c99d0b3b127a17e144551867e7d52e480fd9243d35c26782db1b11bf0 0.0s done
+#10 exporting attestation manifest sha256:d2e1bf76a9b27bd3e7a74d2a5693811fcefa76cd063813a63cac35988ba6576f 0.0s done
+#10 exporting manifest list sha256:e3aa852d3adecbb64335ed1750907cac9755aca1483aee64e1989aa5d564f06e 0.0s done
+#10 naming to docker.io/library/asterisk:latest
 #10 naming to docker.io/library/asterisk:latest done
-#10 unpacking to docker.io/library/asterisk:latest
-#10 unpacking to docker.io/library/asterisk:latest 0.7s done
-#10 DONE 4.3s
+#10 unpacking to docker.io/library/asterisk:latest 0.1s done
+#10 DONE 0.4s
 
  [33m1 warning found (use docker --debug to expand):
 [0m - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 13)
 docker.io/library/asterisk:latest       	saved	
-application/vnd.oci.image.index.v1+json sha256:7af5c6821bba9f5289e81d3ebc2ddee092fc38a647005d620edf000d721cf240
-Importing	elapsed: 1.6 s	total:   0.0 B	(0.0 B/s)	
+application/vnd.oci.image.index.v1+json sha256:e3aa852d3adecbb64335ed1750907cac9755aca1483aee64e1989aa5d564f06e
+Importing	elapsed: 1.0 s	total:   0.0 B	(0.0 B/s)	
 deployment.apps/asterisk restarted

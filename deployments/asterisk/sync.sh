@@ -6,7 +6,7 @@ sleep 5
 while true; do
   # Fetch SIP accounts from database
   # We use the postgres service name 'postgres' and standard port
-  PGPASSWORD=admin psql -h postgres -U postgres -d cpaas -t -c "SELECT username, password FROM \"SipAccounts\"" > /tmp/accounts.txt 2>/dev/null
+  PGPASSWORD=supersecurepassword psql -h postgres -U postgres -d cpaas_db -t -A -F" " -c "SELECT \"Username\", \"Password\" FROM \"SipAccounts\"" > /tmp/accounts.txt 2>/dev/null
   
   if [ $? -eq 0 ]; then
     echo "[transport-udp]" > /etc/asterisk/pjsip.conf
