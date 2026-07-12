@@ -21,6 +21,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure Asterisk Services
+builder.Services.Configure<backend.Models.AsteriskSettings>(builder.Configuration.GetSection("Asterisk"));
+builder.Services.AddHttpClient<backend.Services.AriRestService>();
+builder.Services.AddHostedService<backend.Services.AriEventService>();
+
 // Configure Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
