@@ -15,5 +15,6 @@ namespace backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
+        public ICollection<PhoneNumber> PhoneNumbers { get; set; } = new List<PhoneNumber>();
     }
 }

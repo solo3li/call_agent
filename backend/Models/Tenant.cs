@@ -16,5 +16,6 @@ namespace backend.Models
         public ICollection<ApiKey> ApiKeys { get; set; } = new List<ApiKey>();
         public ICollection<Webhook> Webhooks { get; set; } = new List<Webhook>();
         public ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
+        public ICollection<PhoneNumber> PhoneNumbers { get; set; } = new List<PhoneNumber>();
     }
 }

@@ -13,6 +13,7 @@ namespace backend.Data
         public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<Webhook> Webhooks { get; set; }
         public DbSet<CallRecord> CallRecords { get; set; }
+        public DbSet<PhoneNumber> PhoneNumbers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,6 +49,17 @@ namespace backend.Data
                 .WithOne(c => c.AiAgent)
                 .HasForeignKey(c => c.AiAgentId)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete of Agent to delete calls
+                
+            modelBuilder.Entity<Tenant>()
+                .HasMany(t => t.PhoneNumbers)
+                .WithOne(p => p.Tenant)
+                .HasForeignKey(p => p.TenantId);
+                
+            modelBuilder.Entity<AiAgent>()
+                .HasMany(a => a.PhoneNumbers)
+                .WithOne(p => p.AiAgent)
+                .HasForeignKey(p => p.AiAgentId)
+                .OnDelete(DeleteBehavior.SetNull); // Unlink phone number when agent is deleted
         }
     }
 }

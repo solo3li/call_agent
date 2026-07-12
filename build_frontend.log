@@ -1,15 +1,15 @@
 #0 building with "default" instance using docker driver
 
 #1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 170B done
-#1 DONE 0.0s
+#1 transferring dockerfile: 170B 0.0s done
+#1 DONE 0.1s
 
 #2 [internal] load metadata for docker.io/library/node:20-alpine
-#2 DONE 0.2s
+#2 DONE 0.7s
 
 #3 [internal] load .dockerignore
-#3 transferring context: 70B done
-#3 DONE 0.0s
+#3 transferring context: 70B 0.0s done
+#3 DONE 0.1s
 
 #4 [internal] load build context
 #4 DONE 0.0s
@@ -19,8 +19,8 @@
 #5 DONE 0.1s
 
 #4 [internal] load build context
-#4 transferring context: 1.51kB done
-#4 DONE 0.0s
+#4 transferring context: 8.03kB done
+#4 DONE 0.2s
 
 #6 [2/6] WORKDIR /app
 #6 CACHED
@@ -32,66 +32,67 @@
 #8 CACHED
 
 #9 [5/6] COPY . .
-#9 CACHED
+#9 DONE 0.1s
 
 #10 [6/6] RUN npm run build
-#10 0.614 
-#10 0.614 > frontend@0.1.0 build
-#10 0.614 > next build
-#10 0.614 
-#10 1.663 Attention: Next.js now collects completely anonymous telemetry regarding usage.
-#10 1.664 This information is used to shape Next.js' roadmap and prioritize features.
-#10 1.664 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-#10 1.664 https://nextjs.org/telemetry
-#10 1.664 
-#10 1.707 ▲ Next.js 16.2.10 (Turbopack)
-#10 1.707 
-#10 1.848 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-#10 1.940   Creating an optimized production build ...
-#10 25.22 ✓ Compiled successfully in 22.7s
-#10 25.28   Running TypeScript ...
-#10 37.08   Finished TypeScript in 11.8s ...
-#10 37.09   Collecting page data using 3 workers ...
-#10 38.80   Generating static pages using 3 workers (0/11) ...
-#10 39.90   Generating static pages using 3 workers (2/11) 
-#10 39.90   Generating static pages using 3 workers (5/11) 
-#10 39.91   Generating static pages using 3 workers (8/11) 
-#10 40.01 ✓ Generating static pages using 3 workers (11/11) in 1213ms
-#10 40.03   Finalizing page optimization ...
-#10 40.05 
-#10 40.05 Route (app)
-#10 40.05 ┌ ○ /
-#10 40.05 ├ ○ /_not-found
-#10 40.05 ├ ○ /agents
-#10 40.05 ├ ƒ /agents/[id]
-#10 40.05 ├ ○ /agents/new
-#10 40.05 ├ ○ /api-keys
-#10 40.05 ├ ○ /calls
-#10 40.05 ├ ○ /login
-#10 40.05 ├ ○ /register
-#10 40.05 └ ○ /webhooks
-#10 40.05 
-#10 40.05 
-#10 40.05 ƒ Proxy (Middleware)
-#10 40.06 
-#10 40.06 ○  (Static)   prerendered as static content
-#10 40.06 ƒ  (Dynamic)  server-rendered on demand
-#10 40.06 
-#10 DONE 40.5s
+#10 1.204 
+#10 1.204 > frontend@0.1.0 build
+#10 1.204 > next build
+#10 1.204 
+#10 2.626 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#10 2.628 This information is used to shape Next.js' roadmap and prioritize features.
+#10 2.628 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#10 2.628 https://nextjs.org/telemetry
+#10 2.628 
+#10 2.668 ▲ Next.js 16.2.10 (Turbopack)
+#10 2.669 
+#10 2.794 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+#10 2.873   Creating an optimized production build ...
+#10 25.22 ✓ Compiled successfully in 21.6s
+#10 25.25   Running TypeScript ...
+#10 34.95   Finished TypeScript in 9.7s ...
+#10 34.96   Collecting page data using 3 workers ...
+#10 35.82   Generating static pages using 3 workers (0/12) ...
+#10 36.51   Generating static pages using 3 workers (3/12) 
+#10 36.51   Generating static pages using 3 workers (6/12) 
+#10 36.63   Generating static pages using 3 workers (9/12) 
+#10 36.63 ✓ Generating static pages using 3 workers (12/12) in 812ms
+#10 36.64   Finalizing page optimization ...
+#10 36.66 
+#10 36.66 Route (app)
+#10 36.66 ┌ ○ /
+#10 36.66 ├ ○ /_not-found
+#10 36.66 ├ ○ /agents
+#10 36.66 ├ ƒ /agents/[id]
+#10 36.66 ├ ○ /agents/new
+#10 36.66 ├ ○ /api-keys
+#10 36.66 ├ ○ /calls
+#10 36.66 ├ ○ /login
+#10 36.66 ├ ○ /register
+#10 36.66 ├ ○ /telecom
+#10 36.66 └ ○ /webhooks
+#10 36.66 
+#10 36.66 
+#10 36.66 ƒ Proxy (Middleware)
+#10 36.66 
+#10 36.66 ○  (Static)   prerendered as static content
+#10 36.66 ƒ  (Dynamic)  server-rendered on demand
+#10 36.66 
+#10 DONE 37.1s
 
 #11 exporting to image
 #11 exporting layers
-#11 exporting layers 1.3s done
-#11 exporting manifest sha256:1d1a4e2beed91edb32bb99422facdbb300dbc2a6f184434e8c7b2e80cb3527fe 0.0s done
-#11 exporting config sha256:7c12a19a79e8bf355556da29dce645c1bd61f49eaec1c2a4ba45ff2e83dad0bc 0.0s done
-#11 exporting attestation manifest sha256:543c7598fd2cf274e47b58382af05e0470b619745deb592560a67b261839354f 0.1s done
-#11 exporting manifest list sha256:dac37353917afc813a7b38293c391c1c92441963ab3eccfd932bd55134c98178
-#11 exporting manifest list sha256:dac37353917afc813a7b38293c391c1c92441963ab3eccfd932bd55134c98178 0.0s done
+#11 exporting layers 1.1s done
+#11 exporting manifest sha256:6055e49e84451f888348666fa7ef2daf5b9afc4cf17248d90f287d39ad3dbc5a 0.0s done
+#11 exporting config sha256:1693b9c350736f8d945358c4fd4ca0d333e697befab786d1f1d21e56b8585b46 0.0s done
+#11 exporting attestation manifest sha256:afe047fb1718c3cdb6cc4494cf6afacb63445f4df6418dd1b84814aa72966a6c 0.0s done
+#11 exporting manifest list sha256:c621da610356715545688a42635c29042835a6e25da30f48edc78cbb03929b9f
+#11 exporting manifest list sha256:c621da610356715545688a42635c29042835a6e25da30f48edc78cbb03929b9f 0.0s done
 #11 naming to docker.io/library/cpaas-frontend:latest done
 #11 unpacking to docker.io/library/cpaas-frontend:latest
 #11 unpacking to docker.io/library/cpaas-frontend:latest 0.3s done
-#11 DONE 1.9s
+#11 DONE 1.6s
 docker.io/library/cpaas frontend:latest 	saved	
-application/vnd.oci.image.index.v1+json sha256:dac37353917afc813a7b38293c391c1c92441963ab3eccfd932bd55134c98178
+application/vnd.oci.image.index.v1+json sha256:c621da610356715545688a42635c29042835a6e25da30f48edc78cbb03929b9f
 Importing	elapsed: 25.6s	total:   0.0 B	(0.0 B/s)	
 deployment.apps/cpaas-frontend restarted
