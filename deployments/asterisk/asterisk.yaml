@@ -20,7 +20,6 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5060
-          hostPort: 5060
           protocol: UDP
 ---
 apiVersion: v1
@@ -28,6 +27,7 @@ kind: Service
 metadata:
   name: asterisk
 spec:
+  type: LoadBalancer
   selector:
     app: asterisk
   ports:
