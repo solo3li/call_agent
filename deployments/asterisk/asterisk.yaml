@@ -21,6 +21,8 @@ spec:
         ports:
         - containerPort: 5060
           protocol: UDP
+        - containerPort: 5060
+          protocol: TCP
 ---
 apiVersion: v1
 kind: Service
@@ -32,6 +34,7 @@ spec:
   selector:
     app: asterisk
   ports:
-  - port: 5060
-    targetPort: 5060
+  - name: sip-udp
+    port: 5060
     protocol: UDP
+    targetPort: 5060

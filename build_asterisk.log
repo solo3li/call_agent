@@ -19,36 +19,36 @@
 #5 DONE 0.1s
 
 #4 [internal] load build context
-#4 transferring context: 1.74kB done
+#4 transferring context: 2.35kB done
 #4 DONE 0.0s
 
 #6 [2/5] RUN apk add --no-cache asterisk asterisk-sample-config asterisk-curl bash postgresql-client jq
 #6 CACHED
 
 #7 [3/5] COPY sync.sh /sync.sh
-#7 DONE 0.4s
+#7 DONE 0.1s
 
 #8 [4/5] COPY extensions.conf /etc/asterisk/extensions.conf
-#8 DONE 0.1s
+#8 DONE 0.3s
 
 #9 [5/5] RUN chmod +x /sync.sh
-#9 DONE 0.6s
+#9 DONE 0.3s
 
 #10 exporting to image
 #10 exporting layers
-#10 exporting layers 0.2s done
-#10 exporting manifest sha256:6d6238afd37be51f6ae60d1ab0e7e28738c4a1d0864ea4186cb45a5759ef31fb 0.0s done
-#10 exporting config sha256:c372adced2279f3942fd5df98c6f6ea9d7bedf9b86dc6a5195f6358cf1750250 0.0s done
-#10 exporting attestation manifest sha256:9bb14fd8c1999d0d3ee4492f5e950e347c0da4d9914cf00a5343fdca495052b4 0.0s done
-#10 exporting manifest list sha256:47b653bcc21ca16d0b7d549f0f3b4b8005ab9592fc13684ffece21649e70c187
-#10 exporting manifest list sha256:47b653bcc21ca16d0b7d549f0f3b4b8005ab9592fc13684ffece21649e70c187 0.0s done
+#10 exporting layers 0.4s done
+#10 exporting manifest sha256:79509963c6a838323d53a5f39b76ae373fe454bb57410f60a050811feafc8de0 0.0s done
+#10 exporting config sha256:afc616a377c46712d5e1383ce518446231ce43fcbe9c7f3c6e0d7ed317353113 0.0s done
+#10 exporting attestation manifest sha256:7afeb97c9a61b1ac8641d808cab2c3c141b31ac28e9946f67f424cb7f4add1b1 0.0s done
+#10 exporting manifest list sha256:4b219426ce2aac2f0e27adf78cd57805514ca01893903d427533a3d16737ff99
+#10 exporting manifest list sha256:4b219426ce2aac2f0e27adf78cd57805514ca01893903d427533a3d16737ff99 0.0s done
 #10 naming to docker.io/library/asterisk:latest done
 #10 unpacking to docker.io/library/asterisk:latest 0.1s done
-#10 DONE 0.5s
+#10 DONE 0.7s
 
  [33m1 warning found (use docker --debug to expand):
 [0m - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 13)
 docker.io/library/asterisk:latest       	saved	
-application/vnd.oci.image.index.v1+json sha256:47b653bcc21ca16d0b7d549f0f3b4b8005ab9592fc13684ffece21649e70c187
-Importing	elapsed: 1.2 s	total:   0.0 B	(0.0 B/s)	
+application/vnd.oci.image.index.v1+json sha256:4b219426ce2aac2f0e27adf78cd57805514ca01893903d427533a3d16737ff99
+Importing	elapsed: 1.4 s	total:   0.0 B	(0.0 B/s)	
 deployment.apps/asterisk restarted
