@@ -18,6 +18,8 @@ export default function CreateAgentPage() {
   
   const [formData, setFormData] = useState({
     name: '',
+    provider: 'alibaba',
+    modelName: 'qwen-omni-turbo',
     promptContext: '',
     welcomeMessage: '',
     voiceId: 'default-voice'
@@ -67,6 +69,27 @@ export default function CreateAgentPage() {
           labelText="Agent Name"
           placeholder="e.g. Sales Representative"
           value={formData.name}
+          onChange={handleChange}
+          required
+        />
+
+        <Select
+          id="agent-provider"
+          name="provider"
+          labelText="AI Provider"
+          value={formData.provider}
+          onChange={handleChange}
+        >
+          <SelectItem value="alibaba" text="Alibaba Qwen Omni" />
+          <SelectItem value="google" text="Google Gemini Live" />
+        </Select>
+
+        <TextInput
+          id="agent-model"
+          name="modelName"
+          labelText="Model Name"
+          placeholder="e.g. qwen-omni-turbo or gemini-2.0-flash-exp"
+          value={formData.modelName}
           onChange={handleChange}
           required
         />

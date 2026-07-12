@@ -121,3 +121,5 @@
 /root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 /root/call_agent/backend/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
 /root/call_agent/backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
+/root/call_agent/backend/bin/Debug/net8.0/DotNetEnv.dll
+/root/call_agent/backend/bin/Debug/net8.0/Superpower.dll

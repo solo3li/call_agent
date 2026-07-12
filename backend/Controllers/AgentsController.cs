@@ -58,6 +58,8 @@ namespace backend.Controllers
                 return NotFound();
 
             agent.Name = agentUpdates.Name;
+            agent.Provider = agentUpdates.Provider;
+            agent.ModelName = agentUpdates.ModelName;
             agent.PromptContext = agentUpdates.PromptContext;
             agent.WelcomeMessage = agentUpdates.WelcomeMessage;
             agent.VoiceId = agentUpdates.VoiceId;
