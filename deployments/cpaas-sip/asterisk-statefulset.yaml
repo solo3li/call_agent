@@ -43,17 +43,13 @@ spec:
           name: sip-tcp
           protocol: TCP
         volumeMounts:
-        - name: sync-script
-          mountPath: /sync.sh
-          subPath: sync.sh
-        - name: extensions
+        - name: asterisk-config
+          mountPath: /etc/asterisk/pjsip.conf
+          subPath: pjsip.conf
+        - name: asterisk-config
           mountPath: /etc/asterisk/extensions.conf
           subPath: extensions.conf
       volumes:
-      - name: sync-script
-        configMap:
-          name: asterisk-config
-          defaultMode: 0777
-      - name: extensions
+      - name: asterisk-config
         configMap:
           name: asterisk-config

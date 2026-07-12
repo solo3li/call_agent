@@ -4,75 +4,39 @@ metadata:
   name: asterisk-config
   namespace: default
 data:
-  extensions.conf: |
-    [from-internal]
-    ; If dialing 4 digits, try to call the extension
-    exten => _XXXX,1,NoOp(Call from ${CALLERID(num)} to Extension ${EXTEN})
-    exten => _XXXX,n,Dial(PJSIP/ext${EXTEN},30)
-    exten => _XXXX,n,Hangup()
+  pjsip.conf: |
+    [transport-udp]
+    type=transport
+    protocol=udp
+    bind=0.0.0.0:5060
+    local_net=10.0.0.0/8
+    local_net=172.16.0.0/12
+    local_net=192.168.0.0/16
     
-    ; Also allow dialing "ext1234" directly if client sends the full string
-    exten => _extXXXX,1,NoOp(Call from ${CALLERID(num)} to Extension ${EXTEN})
-    exten => _extXXXX,n,Dial(PJSIP/${EXTEN},30)
-    exten => _extXXXX,n,Hangup()
-    
-    ; Catch-all for anything else (hello world test)
-    exten => _X.,1,Answer()
-    exten => _X.,n,Wait(1)
-    exten => _X.,n,Playback(hello-world)
-    exten => _X.,n,Hangup()
-    
-  sync.sh: |
-    #!/bin/bash
-    sleep 5
-    while true; do
-      PGPASSWORD=supersecurepassword psql -h postgres.default.svc.cluster.local -U postgres -d cpaas_db -t -A -F" " -c "SELECT \"Username\", \"Password\" FROM \"SipAccounts\"" > /tmp/accounts.txt 2>/dev/null
-      if [ $? -eq 0 ]; then
-        echo "[transport-udp]" > /etc/asterisk/pjsip.conf
-        echo "type=transport" >> /etc/asterisk/pjsip.conf
-        echo "protocol=udp" >> /etc/asterisk/pjsip.conf
-        echo "bind=0.0.0.0:5060" >> /etc/asterisk/pjsip.conf
-        echo "local_net=10.0.0.0/8" >> /etc/asterisk/pjsip.conf
-        
-        echo "" >> /etc/asterisk/pjsip.conf
-        echo "[transport-tcp]" >> /etc/asterisk/pjsip.conf
-        echo "type=transport" >> /etc/asterisk/pjsip.conf
-        echo "protocol=tcp" >> /etc/asterisk/pjsip.conf
-        echo "bind=0.0.0.0:5060" >> /etc/asterisk/pjsip.conf
-        echo "local_net=10.0.0.0/8" >> /etc/asterisk/pjsip.conf
-        
-        while read -r username password; do
-          username=$(echo "$username" | xargs)
-          password=$(echo "$password" | xargs)
-          if [ -z "$username" ]; then continue; fi
-          
-          cat >> /etc/asterisk/pjsip.conf <<EOF
-    [$username]
+    [kamailio]
     type=endpoint
+    transport=transport-udp
     context=from-internal
     disallow=all
-    allow=ulaw
-    allow=alaw
-    auth=$username
-    aors=$username
-    rewrite_contact=yes
-    rtp_symmetric=yes
-    force_rport=yes
-    direct_media=no
+    allow=ulaw,alaw
+    aors=kamailio
     
-    [$username]
-    type=auth
-    auth_type=userpass
-    password=$password
-    username=$username
-    
-    [$username]
+    [kamailio]
     type=aor
-    max_contacts=1
+    contact=sip:10.42.0.1:5060  # This doesn't strictly matter as we dial with @kamailio
     
-    EOF
-        done < /tmp/accounts.txt
-        asterisk -rx "pjsip reload" >/dev/null 2>&1
-      fi
-      sleep 10
-    done
+    [kamailio]
+    type=identify
+    endpoint=kamailio
+    match=10.42.0.0/16
+    match=10.43.0.0/16
+    
+  extensions.conf: |
+    [general]
+    static=yes
+    writeprotect=no
+    
+    [from-internal]
+    exten => _X.,1,NoOp(Call from Kamailio to ${EXTEN})
+    same => n,Dial(PJSIP/${EXTEN}@kamailio)
+    same => n,Hangup()

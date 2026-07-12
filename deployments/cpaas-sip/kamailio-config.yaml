@@ -4,23 +4,24 @@ metadata:
   name: kamailio-config
   namespace: default
 data:
-  dispatcher.list: |
-    # setid destination
-    1 sip:asterisk-0.asterisk-headless.default.svc.cluster.local:5060
-    1 sip:asterisk-1.asterisk-headless.default.svc.cluster.local:5060
-  
   kamailio.cfg: |
     #!KAMAILIO
     
     ####### Global Parameters #########
     debug=2
-    log_stderror=yes
+    log_stderror=no
+    fork=yes
+    children=4
+    
     listen=udp:0.0.0.0:5060
     listen=tcp:0.0.0.0:5060
     
     ####### Modules Section ########
-    loadmodule "sl.so"
+    mpath="/usr/lib/kamailio/modules/"
+    
+    loadmodule "db_postgres.so"
     loadmodule "tm.so"
+    loadmodule "sl.so"
     loadmodule "rr.so"
     loadmodule "pv.so"
     loadmodule "maxfwd.so"
@@ -28,25 +29,34 @@ data:
     loadmodule "siputils.so"
     loadmodule "xlog.so"
     loadmodule "sanity.so"
+    loadmodule "auth.so"
+    loadmodule "auth_db.so"
+    loadmodule "usrloc.so"
+    loadmodule "registrar.so"
     
-    # Dispatcher module configuration removed
+    # DB URL
+    #!define DBURL "postgres://postgres:supersecurepassword@postgres.default.svc.cluster.local:5432/cpaas_db"
+    
+    # Auth DB
+    modparam("auth_db", "db_url", DBURL)
+    modparam("auth_db", "calculate_ha1", yes)
+    modparam("auth_db", "password_column", "password")
+    modparam("auth_db", "user_column", "username")
+    modparam("auth_db", "use_domain", 0)
+    modparam("auth_db", "load_credentials", "")
+    
+    # Usrloc (RAM only)
+    modparam("usrloc", "db_url", DBURL)
+    modparam("usrloc", "db_mode", 0)
+    
+    # Registrar
+    modparam("registrar", "default_expires", 3600)
     
     ####### Routing Logic ########
     request_route {
-        if (!mf_process_maxfwd_header("10")) {
-            sl_send_reply("483", "Too Many Hops");
-            exit;
-        }
-        if (!sanity_check()) {
-            exit;
-        }
+        route(REQINIT);
         
-        # Record routing for dialogs
-        if (is_method("INVITE|SUBSCRIBE")) {
-            record_route();
-        }
-        
-        # Route within dialogs
+        # Handle requests within dialogs
         if (has_totag()) {
             if (loose_route()) {
                 route(RELAY);
@@ -64,7 +74,7 @@ data:
             exit;
         }
         
-        # Cancel processing
+        # CANCEL processing
         if (is_method("CANCEL")) {
             if (t_check_trans()) {
                 route(RELAY);
@@ -74,10 +84,61 @@ data:
         
         t_check_trans();
         
-        # Forward everything to Asterisk headless service
-        $du = "sip:asterisk-headless.default.svc.cluster.local:5060";
+        # Handle REGISTRATIONS
+        if (is_method("REGISTER")) {
+            route(AUTH);
+            if (!save("location")) {
+                sl_reply_error();
+            }
+            exit;
+        }
         
+        # Handle INVITEs
+        if (is_method("INVITE")) {
+            record_route();
+            
+            # If the INVITE is coming from Asterisk, it means Asterisk has processed it
+            # and wants to send it to the actual destination.
+            if (src_ip == 10.42.0.0/16 || src_ip == 10.43.0.0/16) {
+                # Look up the registered user in memory
+                if (!lookup("location")) {
+                    send_reply("404", "Not Found");
+                    exit;
+                }
+                route(RELAY);
+                exit;
+            }
+            
+            # If the INVITE is from a User, we authenticate it first!
+            route(AUTH);
+            
+            # Then we send the call to Asterisk for media/B2BUA processing
+            $du = "sip:asterisk-headless.default.svc.cluster.local:5060";
+            route(RELAY);
+            exit;
+        }
+        
+        # Relay everything else
         route(RELAY);
+    }
+    
+    route[REQINIT] {
+        if (!mf_process_maxfwd_header("10")) {
+            sl_send_reply("483", "Too Many Hops");
+            exit;
+        }
+        if (!sanity_check("1511", "7")) {
+            xlog("Malformed SIP message from $si:$sp\n");
+            exit;
+        }
+    }
+    
+    route[AUTH] {
+        if (!auth_check("$fd", "subscriber", "1")) {
+            auth_challenge("$fd", "0");
+            exit;
+        }
+        consume_credentials();
     }
     
     route[RELAY] {
