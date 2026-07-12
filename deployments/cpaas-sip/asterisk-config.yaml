@@ -4,6 +4,22 @@ metadata:
   name: asterisk-config
   namespace: default
 data:
+  http.conf: |
+    [general]
+    enabled=yes
+    bindaddr=0.0.0.0
+    bindport=8088
+
+  ari.conf: |
+    [general]
+    enabled=yes
+    pretty=yes
+    
+    [cpaas]
+    type=user
+    read_only=no
+    password=cpaas_secret
+
   pjsip.conf: |
     [transport-udp]
     type=transport
@@ -15,13 +31,17 @@ data:
     
     #include dynamic/pjsip_endpoints.conf
 
-    
   extensions.conf: |
     [general]
     static=yes
     writeprotect=no
     
     [from-internal]
+    ; Route 9999 to the ARI application 'cpaas'
+    exten => 9999,1,NoOp(Handing call over to Backend ARI)
+    same => n,Stasis(cpaas)
+    same => n,Hangup()
+
     ; If the user dials exactly 4 digits (e.g. 1234), prepend 'ext'
     exten => _XXXX,1,NoOp(Call to ext${EXTEN})
     same => n,Dial(PJSIP/ext${EXTEN})

@@ -26,6 +26,12 @@ spec:
         - name: asterisk-config-src
           mountPath: /etc/asterisk/extensions.conf
           subPath: extensions.conf
+        - name: asterisk-config-src
+          mountPath: /etc/asterisk/http.conf
+          subPath: http.conf
+        - name: asterisk-config-src
+          mountPath: /etc/asterisk/ari.conf
+          subPath: ari.conf
         - name: asterisk-dynamic
           mountPath: /etc/asterisk/dynamic/
         - name: asterisk-run
