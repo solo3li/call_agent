@@ -53,6 +53,10 @@ spec:
           allow=ulaw,alaw
           auth=${user}
           aors=${user}
+          rewrite_contact=yes
+          force_rport=yes
+          rtp_symmetric=yes
+          direct_media=no
 
           [${user}]
           type=auth
