@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asterisk
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asterisk
+  template:
+    metadata:
+      labels:
+        app: asterisk
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: asterisk
+        image: asterisk:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: asterisk-config-src
+          mountPath: /etc/asterisk/pjsip.conf
+          subPath: pjsip.conf
+        - name: asterisk-config-src
+          mountPath: /etc/asterisk/extensions.conf
+          subPath: extensions.conf
+        - name: asterisk-dynamic
+          mountPath: /etc/asterisk/dynamic/
+        - name: asterisk-run
+          mountPath: /var/run/asterisk/
+      - name: sync
+        image: postgres:15-alpine
+        env:
+        - name: PGPASSWORD
+          value: "supersecurepassword"
+        command: ['sh', '-c']
+        args:
+        - |
+          apk add --no-cache asterisk
+          while true; do
+            psql -A -h postgres -U postgres -d cpaas_db -t -c 'SELECT "Username", "Password" FROM "SipAccounts"' | sed 's/|/ /g' > /tmp/users.txt
+            if [ $? -eq 0 ]; then
+              echo "" > /tmp/pjsip_endpoints.conf.tmp
+              while read user pass; do
+                if [ ! -z "$user" ]; then
+                  cat <<EOF >> /tmp/pjsip_endpoints.conf.tmp
+          [${user}]
+          type=endpoint
+          context=from-internal
+          disallow=all
+          allow=ulaw,alaw
+          auth=${user}
+          aors=${user}
+
+          [${user}]
+          type=auth
+          auth_type=userpass
+          password=${pass}
+          username=${user}
+
+          [${user}]
+          type=aor
+          max_contacts=2
+          EOF
+                fi
+              done < /tmp/users.txt
+              # Only reload if config changed
+              if ! cmp -s /tmp/pjsip_endpoints.conf.tmp /etc/asterisk/dynamic/pjsip_endpoints.conf; then
+                mv /tmp/pjsip_endpoints.conf.tmp /etc/asterisk/dynamic/pjsip_endpoints.conf
+                asterisk -rx "core reload"
+              fi
+            fi
+            sleep 15
+          done
+        volumeMounts:
+        - name: asterisk-dynamic
+          mountPath: /etc/asterisk/dynamic/
+        - name: asterisk-run
+          mountPath: /var/run/asterisk/
+      volumes:
+      - name: asterisk-config-src
+        configMap:
+          name: asterisk-config
+      - name: asterisk-dynamic
+        emptyDir: {}
+      - name: asterisk-run
+        emptyDir: {}

@@ -13,23 +13,8 @@ data:
     local_net=172.16.0.0/12
     local_net=192.168.0.0/16
     
-    [kamailio]
-    type=endpoint
-    transport=transport-udp
-    context=from-internal
-    disallow=all
-    allow=ulaw,alaw
-    aors=kamailio
-    
-    [kamailio]
-    type=aor
-    contact=sip:10.42.0.1:5060  # This doesn't strictly matter as we dial with @kamailio
-    
-    [kamailio]
-    type=identify
-    endpoint=kamailio
-    match=10.42.0.0/16
-    match=10.43.0.0/16
+    #include dynamic/pjsip_endpoints.conf
+
     
   extensions.conf: |
     [general]
@@ -38,16 +23,16 @@ data:
     
     [from-internal]
     ; If the user dials exactly 4 digits (e.g. 1234), prepend 'ext'
-    exten => _XXXX,1,NoOp(Call from Kamailio to ext${EXTEN})
-    same => n,Dial(PJSIP/ext${EXTEN}@kamailio)
+    exten => _XXXX,1,NoOp(Call to ext${EXTEN})
+    same => n,Dial(PJSIP/ext${EXTEN})
     same => n,Hangup()
     
     ; If they dial the full name (e.g. ext1234)
-    exten => _extXXXX,1,NoOp(Call from Kamailio to ${EXTEN})
-    same => n,Dial(PJSIP/${EXTEN}@kamailio)
+    exten => _extXXXX,1,NoOp(Call to ${EXTEN})
+    same => n,Dial(PJSIP/${EXTEN})
     same => n,Hangup()
     
     ; Fallback for everything else
-    exten => _[a-zA-Z0-9].,1,NoOp(Call from Kamailio to ${EXTEN})
-    same => n,Dial(PJSIP/${EXTEN}@kamailio)
+    exten => _[a-zA-Z0-9].,1,NoOp(Call to ${EXTEN})
+    same => n,Dial(PJSIP/${EXTEN})
     same => n,Hangup()
