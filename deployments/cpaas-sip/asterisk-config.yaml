@@ -37,6 +37,17 @@ data:
     writeprotect=no
     
     [from-internal]
-    exten => _X.,1,NoOp(Call from Kamailio to ${EXTEN})
+    ; If the user dials exactly 4 digits (e.g. 1234), prepend 'ext'
+    exten => _XXXX,1,NoOp(Call from Kamailio to ext${EXTEN})
+    same => n,Dial(PJSIP/ext${EXTEN}@kamailio)
+    same => n,Hangup()
+    
+    ; If they dial the full name (e.g. ext1234)
+    exten => _extXXXX,1,NoOp(Call from Kamailio to ${EXTEN})
+    same => n,Dial(PJSIP/${EXTEN}@kamailio)
+    same => n,Hangup()
+    
+    ; Fallback for everything else
+    exten => _[a-zA-Z0-9].,1,NoOp(Call from Kamailio to ${EXTEN})
     same => n,Dial(PJSIP/${EXTEN}@kamailio)
     same => n,Hangup()
