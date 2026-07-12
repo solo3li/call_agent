@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace backend.Services
 {
-    public class AlibabaOmniClient : IDisposable
+    public class AlibabaOmniClient : IAudioAiClient
     {
         private readonly AlibabaSettings _settings;
         private readonly ILogger<AlibabaOmniClient> _logger;
@@ -18,7 +18,7 @@ namespace backend.Services
             _logger = logger;
         }
 
-        public async Task ConnectAsync(CancellationToken cancellationToken)
+        public async Task ConnectAsync(string modelName, CancellationToken cancellationToken)
         {
             _webSocket = new ClientWebSocket();
             _webSocket.Options.SetRequestHeader("Authorization", $"Bearer {_settings.ApiKey}");
@@ -31,7 +31,7 @@ namespace backend.Services
             var setupMsg = new {
                 header = new { action = "run-task", task_id = Guid.NewGuid().ToString() },
                 payload = new {
-                    model = "qwen-omni-turbo",
+                    model = modelName,
                     parameters = new { sample_rate = 8000, format = "ulaw" }
                 }
             };

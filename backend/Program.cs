@@ -4,8 +4,13 @@ using backend.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using DotNetEnv;
+
+// Load .env file from the root of the project
+Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "../.env"));
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -30,6 +35,10 @@ builder.Services.AddHostedService<backend.Services.AriEventService>();
 builder.Services.Configure<backend.Models.AlibabaSettings>(builder.Configuration.GetSection("Alibaba"));
 builder.Services.AddTransient<backend.Services.AlibabaOmniClient>();
 builder.Services.AddSingleton<backend.Services.UdpAudioServer>();
+
+// Configure Google AI Services
+builder.Services.Configure<backend.Models.GoogleSettings>(builder.Configuration.GetSection("Google"));
+builder.Services.AddTransient<backend.Services.GoogleGeminiClient>();
 
 // Configure Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

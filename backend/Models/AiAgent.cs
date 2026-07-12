@@ -9,6 +9,8 @@ namespace backend.Models
         public Tenant? Tenant { get; set; }
         
         public string Name { get; set; } = string.Empty;
+        public string Provider { get; set; } = "alibaba";
+        public string ModelName { get; set; } = "qwen-omni-turbo";
         public string PromptContext { get; set; } = string.Empty;
         public string? WelcomeMessage { get; set; }
         public string VoiceId { get; set; } = "default-voice";

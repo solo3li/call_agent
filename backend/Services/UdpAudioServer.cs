@@ -12,7 +12,7 @@ namespace backend.Services
             _logger = logger;
         }
 
-        public async Task StartStreamingAsync(int port, AlibabaOmniClient alibabaClient, CancellationToken cancellationToken)
+        public async Task StartStreamingAsync(int port, IAudioAiClient aiClient, CancellationToken cancellationToken)
         {
             using var udpClient = new UdpClient(port);
             _logger.LogInformation("UDP Audio Server listening on port {Port}", port);
@@ -23,8 +23,8 @@ namespace backend.Services
                 {
                     var result = await udpClient.ReceiveAsync(cancellationToken);
                     // result.Buffer contains raw audio from Asterisk (usually RTP or raw ULAW)
-                    // Send to Alibaba
-                    await alibabaClient.SendAudioAsync(result.Buffer, cancellationToken);
+                    // Send to AI
+                    await aiClient.SendAudioAsync(result.Buffer, cancellationToken);
                 }
             }
             catch (OperationCanceledException)
