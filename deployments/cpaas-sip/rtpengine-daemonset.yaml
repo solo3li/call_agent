@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rtpengine
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: rtpengine
+  template:
+    metadata:
+      labels:
+        app: rtpengine
+    spec:
+      hostNetwork: true
+      containers:
+      - name: rtpengine
+        image: davehorton/rtpengine:latest
+        args:
+        - "rtpengine"
+        - "--interface=178.62.192.74"
+        - "--listen-ng=127.0.0.1:22222"
+        - "--port-min=10000"
+        - "--port-max=20000"
+        - "--recording-dir=/tmp"
+        - "--recording-method=pcap"
+        - "--foreground"
+        ports:
+        - containerPort: 22222
+          protocol: UDP

@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kamailio-config
+  namespace: default
+data:
+  dispatcher.list: |
+    # setid destination
+    1 sip:asterisk-0.asterisk-headless.default.svc.cluster.local:5060
+    1 sip:asterisk-1.asterisk-headless.default.svc.cluster.local:5060
+  
+  kamailio.cfg: |
+    #!KAMAILIO
+    
+    ####### Global Parameters #########
+    debug=2
+    log_stderror=yes
+    listen=udp:0.0.0.0:5060
+    listen=tcp:0.0.0.0:5060
+    
+    ####### Modules Section ########
+    loadmodule "sl.so"
+    loadmodule "tm.so"
+    loadmodule "rr.so"
+    loadmodule "pv.so"
+    loadmodule "maxfwd.so"
+    loadmodule "textops.so"
+    loadmodule "siputils.so"
+    loadmodule "xlog.so"
+    loadmodule "sanity.so"
+    loadmodule "dispatcher.so"
+    
+    # Dispatcher module configuration
+    modparam("dispatcher", "list_file", "/etc/kamailio/dispatcher.list")
+    modparam("dispatcher", "flags", 2)
+    
+    ####### Routing Logic ########
+    request_route {
+        if (!mf_process_maxfwd_header("10")) {
+            sl_send_reply("483", "Too Many Hops");
+            exit;
+        }
+        if (!sanity_check()) {
+            exit;
+        }
+        
+        # Record routing for dialogs
+        if (is_method("INVITE|SUBSCRIBE")) {
+            record_route();
+        }
+        
+        # Route within dialogs
+        if (has_totag()) {
+            if (loose_route()) {
+                route(RELAY);
+                exit;
+            }
+            if (is_method("ACK")) {
+                if (t_check_trans()) {
+                    route(RELAY);
+                    exit;
+                } else {
+                    exit;
+                }
+            }
+            sl_send_reply("404", "Not here");
+            exit;
+        }
+        
+        # Cancel processing
+        if (is_method("CANCEL")) {
+            if (t_check_trans()) {
+                route(RELAY);
+            }
+            exit;
+        }
+        
+        t_check_trans();
+        
+        # Load balance all requests to Asterisk (Group 1)
+        if (!ds_select_dst("1", "4")) {
+            send_reply("503", "No destination");
+            exit;
+        }
+        
+        route(RELAY);
+    }
+    
+    route[RELAY] {
+        if (!t_relay()) {
+            sl_reply_error();
+        }
+        exit;
+    }

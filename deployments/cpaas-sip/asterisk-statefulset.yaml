@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: asterisk-headless
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: asterisk
+  ports:
+  - name: sip-udp
+    port: 5060
+    protocol: UDP
+  - name: sip-tcp
+    port: 5060
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: asterisk
+  namespace: default
+spec:
+  serviceName: "asterisk-headless"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: asterisk
+  template:
+    metadata:
+      labels:
+        app: asterisk
+    spec:
+      containers:
+      - name: asterisk
+        image: asterisk:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5060
+          name: sip-udp
+          protocol: UDP
+        - containerPort: 5060
+          name: sip-tcp
+          protocol: TCP
+        volumeMounts:
+        - name: sync-script
+          mountPath: /sync.sh
+          subPath: sync.sh
+        - name: extensions
+          mountPath: /etc/asterisk/extensions.conf
+          subPath: extensions.conf
+      volumes:
+      - name: sync-script
+        configMap:
+          name: asterisk-config
+          defaultMode: 0777
+      - name: extensions
+        configMap:
+          name: asterisk-config
