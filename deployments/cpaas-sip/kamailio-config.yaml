@@ -28,11 +28,8 @@ data:
     loadmodule "siputils.so"
     loadmodule "xlog.so"
     loadmodule "sanity.so"
-    loadmodule "dispatcher.so"
     
-    # Dispatcher module configuration
-    modparam("dispatcher", "list_file", "/etc/kamailio/dispatcher.list")
-    modparam("dispatcher", "flags", 2)
+    # Dispatcher module configuration removed
     
     ####### Routing Logic ########
     request_route {
@@ -77,11 +74,8 @@ data:
         
         t_check_trans();
         
-        # Load balance all requests to Asterisk (Group 1)
-        if (!ds_select_dst("1", "4")) {
-            send_reply("503", "No destination");
-            exit;
-        }
+        # Forward everything to Asterisk headless service
+        $du = "sip:asterisk-headless.default.svc.cluster.local:5060";
         
         route(RELAY);
     }
