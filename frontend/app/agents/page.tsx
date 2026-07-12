@@ -41,6 +41,8 @@ export default function AgentsPage() {
 
   const headers = [
     { key: 'name', header: 'Agent Name' },
+    { key: 'provider', header: 'Provider' },
+    { key: 'modelName', header: 'Model' },
     { key: 'voiceId', header: 'Voice ID' },
     { key: 'createdAt', header: 'Created At' }
   ];
@@ -48,6 +50,8 @@ export default function AgentsPage() {
   const rows = agents.map((agent: any) => ({
     id: agent.id,
     name: agent.name,
+    provider: agent.provider || 'alibaba',
+    modelName: agent.modelName || 'qwen-omni-turbo',
     voiceId: agent.voiceId,
     createdAt: new Date(agent.createdAt).toLocaleDateString()
   }));
