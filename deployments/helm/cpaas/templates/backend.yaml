@@ -16,6 +16,9 @@ spec:
         - name: backend
           image: "{{ .Values.backend.image }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          envFrom:
+            - secretRef:
+                name: cpaas-env
           ports:
             - containerPort: {{ .Values.backend.port }}
 ---
