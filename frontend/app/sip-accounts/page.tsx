@@ -95,19 +95,36 @@ export default function SipAccountsPage() {
       {error && <InlineNotification kind="error" title="Error" subtitle={error} style={{ marginBottom: '2rem' }} />}
 
       {createdAccount && (
-        <InlineNotification
-          kind="success"
-          title="SIP Account Created"
-          style={{ marginBottom: '2rem', maxWidth: '100%' }}
-          onCloseButtonClick={() => setCreatedAccount(null)}
-        >
-          <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <p><strong>Domain/Server:</strong> <code>{createdAccount.domain}</code></p>
-            <p><strong>Username:</strong> <code>{createdAccount.username}</code></p>
-            <p><strong>Password:</strong> <code>{createdAccount.password}</code></p>
-            <p style={{ color: '#da1e28', marginTop: '0.5rem' }}>Please copy this password now. It will not be shown again.</p>
+        <div style={{ marginBottom: '2rem', maxWidth: '100%' }}>
+          <InlineNotification
+            kind="success"
+            title="SIP Account Created"
+            subtitle="Your MicroSIP test account is ready."
+            style={{ marginBottom: '1rem', maxWidth: '100%' }}
+            onCloseButtonClick={() => setCreatedAccount(null)}
+          />
+          <div style={{ background: '#262626', padding: '1.5rem', borderRadius: '4px', borderLeft: '4px solid #24a148' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>Account Credentials</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <p style={{ width: '130px', margin: 0 }}><strong>Domain/Server:</strong></p>
+                <code style={{ background: '#161616', padding: '0.5rem', borderRadius: '4px', flex: 1 }}>{createdAccount.domain}</code>
+                <Button size="sm" kind="ghost" renderIcon={Copy} hasIconOnly iconDescription="Copy Domain" onClick={() => navigator.clipboard.writeText(createdAccount.domain)} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <p style={{ width: '130px', margin: 0 }}><strong>Username:</strong></p>
+                <code style={{ background: '#161616', padding: '0.5rem', borderRadius: '4px', flex: 1 }}>{createdAccount.username}</code>
+                <Button size="sm" kind="ghost" renderIcon={Copy} hasIconOnly iconDescription="Copy Username" onClick={() => navigator.clipboard.writeText(createdAccount.username)} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <p style={{ width: '130px', margin: 0 }}><strong>Password:</strong></p>
+                <code style={{ background: '#161616', padding: '0.5rem', borderRadius: '4px', flex: 1 }}>{createdAccount.password}</code>
+                <Button size="sm" kind="ghost" renderIcon={Copy} hasIconOnly iconDescription="Copy Password" onClick={() => navigator.clipboard.writeText(createdAccount.password)} />
+              </div>
+              <p style={{ color: '#da1e28', marginTop: '0.5rem', margin: 0 }}>Please copy this password now. It will not be shown again.</p>
+            </div>
           </div>
-        </InlineNotification>
+        </div>
       )}
 
       <DataTable rows={rows} headers={headers}>

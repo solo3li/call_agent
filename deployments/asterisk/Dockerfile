@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache asterisk asterisk-curl asterisk-pjproject bash postgresql-client jq
+RUN apk add --no-cache asterisk asterisk-sample-config asterisk-curl bash postgresql-client jq
 
 COPY sync.sh /sync.sh
 COPY extensions.conf /etc/asterisk/extensions.conf
