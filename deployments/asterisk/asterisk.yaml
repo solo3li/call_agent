@@ -28,6 +28,7 @@ metadata:
   name: asterisk
 spec:
   type: LoadBalancer
+  externalTrafficPolicy: Local
   selector:
     app: asterisk
   ports:

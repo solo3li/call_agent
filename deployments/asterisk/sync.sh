@@ -13,6 +13,11 @@ while true; do
     echo "type=transport" >> /etc/asterisk/pjsip.conf
     echo "protocol=udp" >> /etc/asterisk/pjsip.conf
     echo "bind=0.0.0.0:5060" >> /etc/asterisk/pjsip.conf
+    echo "local_net=10.0.0.0/8" >> /etc/asterisk/pjsip.conf
+    echo "local_net=172.16.0.0/12" >> /etc/asterisk/pjsip.conf
+    echo "local_net=192.168.0.0/16" >> /etc/asterisk/pjsip.conf
+    echo "external_media_address=178.62.192.74" >> /etc/asterisk/pjsip.conf
+    echo "external_signaling_address=178.62.192.74" >> /etc/asterisk/pjsip.conf
     echo "" >> /etc/asterisk/pjsip.conf
 
     while read -r username password; do
@@ -31,6 +36,10 @@ allow=ulaw
 allow=alaw
 auth=$username
 aors=$username
+rewrite_contact=yes
+rtp_symmetric=yes
+force_rport=yes
+direct_media=no
 
 [$username]
 type=auth
