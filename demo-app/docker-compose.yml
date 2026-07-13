@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  demo-backend:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      # Use docker host's network to reach the C# Backend
+      - CPAAS_BASE_URL=http://host.docker.internal:5000
+      - CPAAS_API_KEY=sk_test_123
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  demo-frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - demo-backend
