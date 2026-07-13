@@ -9,7 +9,9 @@ import (
 	"github.com/pion/webrtc/v3/pkg/media"
 )
 
-func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBridge) *lksdk.Room {
+func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBridge) (*lksdk.Room, <-chan struct{}) {
+	done := make(chan struct{})
+
 	outTrack, err := lksdk.NewLocalSampleTrack(webrtc.RTPCodecCapability{
 		MimeType:  webrtc.MimeTypeOpus,
 		ClockRate: 48000,
@@ -19,12 +21,24 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 		log.Fatalf("Could not create local track: %v", err)
 	}
 
-	room, err := lksdk.ConnectToRoom(url, lksdk.ConnectInfo{
+	var room *lksdk.Room
+
+	room, err = lksdk.ConnectToRoom(url, lksdk.ConnectInfo{
 		APIKey:              apiKey,
 		APISecret:           apiSecret,
 		RoomName:            roomName,
 		ParticipantIdentity: "ai-agent",
 	}, &lksdk.RoomCallback{
+		OnDisconnected: func() {
+			log.Printf("LiveKit Room %s disconnected", roomName)
+			close(done)
+		},
+		OnParticipantDisconnected: func(rp *lksdk.RemoteParticipant) {
+			log.Printf("User participant %s left. Disconnecting AI...", rp.Identity())
+			if room != nil {
+				room.Disconnect()
+			}
+		},
 		ParticipantCallback: lksdk.ParticipantCallback{
 			OnTrackSubscribed: func(track *webrtc.TrackRemote, publication *lksdk.RemoteTrackPublication, rp *lksdk.RemoteParticipant) {
 				log.Printf("Track subscribed: %s", track.ID())
@@ -45,32 +59,41 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 	})
 
 	if err != nil {
-		log.Fatalf("could not connect to LiveKit: %v", err)
+		log.Printf("Could not connect to LiveKit: %v", err)
+		return nil, nil
 	}
 
-	log.Println("Connected to LiveKit room!")
+	log.Printf("AI Agent successfully joined LiveKit room: %s", roomName)
 
 	_, err = room.LocalParticipant.PublishTrack(outTrack, &lksdk.TrackPublicationOptions{
 		Name: "ai-response",
 	})
 	if err != nil {
-		log.Fatalf("Could not publish local track: %v", err)
+		log.Printf("Could not publish local track: %v", err)
 	}
 
 	go func() {
-		for pcm := range bridge.PCMIn {
-			encodedBytes := bridge.EncodeOutgoingPCM(pcm)
-			if encodedBytes != nil {
-				err = outTrack.WriteSample(media.Sample{
-					Data:     encodedBytes,
-					Duration: 20 * time.Millisecond,
-				}, nil)
-				if err != nil {
-					log.Printf("Error writing sample: %v", err)
+		for {
+			select {
+			case <-done:
+				return
+			case pcm, ok := <-bridge.PCMIn:
+				if !ok {
+					return
+				}
+				encodedBytes := bridge.EncodeOutgoingPCM(pcm)
+				if encodedBytes != nil {
+					err = outTrack.WriteSample(media.Sample{
+						Data:     encodedBytes,
+						Duration: 20 * time.Millisecond,
+					}, nil)
+					if err != nil {
+						log.Printf("Error writing sample: %v", err)
+					}
 				}
 			}
 		}
 	}()
 
-	return room
+	return room, done
 }
