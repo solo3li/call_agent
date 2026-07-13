@@ -14,6 +14,7 @@ builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -45,6 +46,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+.AddScheme<backend.Security.ApiKeyAuthenticationOptions, backend.Security.ApiKeyAuthenticationHandler>("ApiKey", null)
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;

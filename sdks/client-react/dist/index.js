@@ -1,68 +1,51 @@
-import React, { useEffect, useState } from 'react';
-import { Room, RoomEvent, RemoteParticipant, RemoteTrackPublication, RemoteTrack, Track } from 'livekit-client';
-
-export interface OmniAgentOptions {
-    token: string;
-    livekitUrl: string;
-    onAgentConnected?: () => void;
-    onAgentDisconnected?: () => void;
-    onAgentSpeaking?: (isSpeaking: boolean) => void;
-}
-
-export const useOmniAgent = (options: OmniAgentOptions) => {
-    const [room, setRoom] = useState<Room | null>(null);
+import { useEffect, useState } from 'react';
+import { Room, RoomEvent, Track } from 'livekit-client';
+export const useOmniAgent = (options) => {
+    const [room, setRoom] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
     const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
-
     useEffect(() => {
-        if (!options.token || !options.livekitUrl) return;
-
+        if (!options.token || !options.livekitUrl)
+            return;
         const newRoom = new Room({
             adaptiveStream: true,
             dynacast: true,
         });
-
         newRoom.on(RoomEvent.Connected, () => {
             setIsConnected(true);
             options.onAgentConnected?.();
         });
-
         newRoom.on(RoomEvent.Disconnected, () => {
             setIsConnected(false);
             options.onAgentDisconnected?.();
         });
-
         newRoom.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
             const agentSpeaking = speakers.some(s => s.identity === 'ai-agent');
             setIsAgentSpeaking(agentSpeaking);
             options.onAgentSpeaking?.(agentSpeaking);
         });
-
-        newRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+        newRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
             if (track.kind === Track.Kind.Audio) {
                 const element = track.attach();
                 document.body.appendChild(element);
             }
         });
-
         const connect = async () => {
             try {
                 await newRoom.connect(options.livekitUrl, options.token);
                 // Publish microphone
                 await newRoom.localParticipant.enableCameraAndMicrophone();
                 setRoom(newRoom);
-            } catch (error) {
+            }
+            catch (error) {
                 console.error('Failed to connect to OmniAgent:', error);
             }
         };
-
         connect();
-
         return () => {
             newRoom.disconnect();
         };
     }, [options.token, options.livekitUrl]);
-
     const disconnect = () => {
         if (room) {
             room.disconnect();
@@ -70,7 +53,6 @@ export const useOmniAgent = (options: OmniAgentOptions) => {
             setIsConnected(false);
         }
     };
-
     return {
         isConnected,
         isAgentSpeaking,
