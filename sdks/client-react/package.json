@@ -1,9 +1,12 @@
 {
-  "name": "@cpaas/client-react",
+  "name": "@solo3li/client-react",
   "version": "1.0.0",
   "description": "React hooks and components for Voice AI CPaaS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc"
   },
