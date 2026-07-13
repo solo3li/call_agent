@@ -11,12 +11,21 @@ func main() {
 	lkUrl := os.Getenv("LIVEKIT_URL")
 	lkKey := os.Getenv("LIVEKIT_API_KEY")
 	lkSecret := os.Getenv("LIVEKIT_API_SECRET")
-	geminiKey := os.Getenv("GEMINI_API_KEY")
+	aiProvider := os.Getenv("AI_PROVIDER") // "gemini" or "alibaba"
+	aiKey := os.Getenv("AI_API_KEY")
 
-	if lkUrl != "" && geminiKey != "" {
-		// Initialize connections
-		geminiConn := ConnectToGeminiLive(geminiKey)
-		defer geminiConn.Close()
+	if lkUrl != "" && aiKey != "" {
+		if aiProvider == "alibaba" {
+			aliConn := ConnectToAlibabaOmni(aiKey)
+			if aliConn != nil {
+				defer aliConn.Close()
+			}
+		} else {
+			geminiConn := ConnectToGeminiLive(aiKey)
+			if geminiConn != nil {
+				defer geminiConn.Close()
+			}
+		}
 
 		room := ConnectToLiveKit(lkUrl, lkKey, lkSecret, "test-room")
 		defer room.Disconnect()
@@ -24,6 +33,6 @@ func main() {
 		// Block forever
 		select {}
 	} else {
-		fmt.Println("Missing Environment Variables. Skipping actual connection. Required: LIVEKIT_URL, GEMINI_API_KEY")
+		fmt.Println("Missing Environment Variables. Required: LIVEKIT_URL, AI_API_KEY")
 	}
 }
