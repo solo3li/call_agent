@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func ConnectToGeminiLive(apiKey string, bridge *AudioBridge) *websocket.Conn {
+func ConnectToGeminiLive(apiKey string, systemPrompt string, bridge *AudioBridge) *websocket.Conn {
 	u := url.URL{Scheme: "wss", Host: "generativelanguage.googleapis.com", Path: "/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"}
 	q := u.Query()
 	q.Set("key", apiKey)
@@ -23,6 +23,25 @@ func ConnectToGeminiLive(apiKey string, bridge *AudioBridge) *websocket.Conn {
 	}
 
 	log.Println("Connected to Gemini WebSockets!")
+
+	// Send Setup message with System Prompt
+	if systemPrompt != "" {
+		setupMsg := map[string]interface{}{
+			"setup": map[string]interface{}{
+				"model": "models/gemini-2.0-flash-exp",
+				"systemInstruction": map[string]interface{}{
+					"parts": []map[string]interface{}{
+						{"text": systemPrompt},
+					},
+				},
+			},
+		}
+		if err := c.WriteJSON(setupMsg); err != nil {
+			log.Printf("Error sending setup message to Gemini: %v", err)
+		} else {
+			log.Printf("Sent Setup message with System Prompt length: %d", len(systemPrompt))
+		}
+	}
 
 	go func() {
 		for pcm := range bridge.PCMOut {

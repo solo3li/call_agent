@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func ConnectToAlibabaOmni(apiKey string, bridge *AudioBridge) *websocket.Conn {
+func ConnectToAlibabaOmni(apiKey string, systemPrompt string, bridge *AudioBridge) *websocket.Conn {
 	u := url.URL{Scheme: "wss", Host: "dashscope.aliyuncs.com", Path: "/api-ws/v1/inference/audio"}
 	q := u.Query()
 	q.Set("api_key", apiKey) 
