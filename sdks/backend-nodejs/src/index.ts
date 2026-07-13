@@ -45,4 +45,34 @@ export class CPaaSClient {
             throw error;
         }
     }
+
+    public async createTransferToken(roomId: string, agentName: string): Promise<{ token: string, livekitUrl: string }> {
+        try {
+            const response = await this.client.post('/api/Connection/transfer-token', {
+                roomId,
+                participantName: agentName
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response) {
+                throw new Error(`CPaaS API Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+            }
+            throw error;
+        }
+    }
+
+    public async initiateSipTransfer(roomId: string, sipUri: string): Promise<{ success: boolean }> {
+        try {
+            const response = await this.client.post('/api/Connection/sip-transfer', {
+                roomId,
+                sipUri
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response) {
+                throw new Error(`CPaaS API Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+            }
+            throw error;
+        }
+    }
 }
