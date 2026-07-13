@@ -1,17 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/url"
 
 	"github.com/gorilla/websocket"
 )
 
-func ConnectToAlibabaOmni(apiKey string) *websocket.Conn {
-	// Example WebSocket connection for Alibaba Omni Turbo
+func ConnectToAlibabaOmni(apiKey string, bridge *AudioBridge) *websocket.Conn {
 	u := url.URL{Scheme: "wss", Host: "dashscope.aliyuncs.com", Path: "/api-ws/v1/inference/audio"}
 	q := u.Query()
-	// Using generic auth mechanism, depends on Alibaba's exact spec
 	q.Set("api_key", apiKey) 
 	u.RawQuery = q.Encode()
 
@@ -23,5 +22,27 @@ func ConnectToAlibabaOmni(apiKey string) *websocket.Conn {
 	}
 
 	log.Println("Connected to Alibaba WebSockets!")
+
+	go func() {
+		for pcm := range bridge.PCMOut {
+			_ = pcm
+			// Placeholder: send PCM to Alibaba (Binary or Base64 JSON)
+		}
+	}()
+
+	go func() {
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				log.Println("Alibaba read error:", err)
+				break
+			}
+			var resp map[string]interface{}
+			if err := json.Unmarshal(message, &resp); err == nil {
+				// Scaffold logic: extract PCM
+			}
+		}
+	}()
+
 	return c
 }
