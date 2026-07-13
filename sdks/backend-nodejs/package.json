@@ -1,9 +1,12 @@
 {
-  "name": "@cpaas/backend-node",
+  "name": "@solo3li/backend-node",
   "version": "1.0.0",
   "description": "Node.js SDK for Voice AI CPaaS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc"
   },
