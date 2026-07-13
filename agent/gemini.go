@@ -34,6 +34,30 @@ func ConnectToGeminiLive(apiKey string, systemPrompt string, bridge *AudioBridge
 						{"text": systemPrompt},
 					},
 				},
+				"tools": []map[string]interface{}{
+					{
+						"functionDeclarations": []map[string]interface{}{
+							{
+								"name":        "transfer_to_webrtc",
+								"description": "Transfers the current call to a human agent via WebRTC. Inform the user you are transferring them, then invoke this.",
+							},
+							{
+								"name":        "transfer_to_sip",
+								"description": "Transfers the current call to a human agent via SIP Dial-out.",
+								"parameters": map[string]interface{}{
+									"type": "object",
+									"properties": map[string]interface{}{
+										"sip_uri": map[string]interface{}{
+											"type":        "string",
+											"description": "The SIP URI to dial",
+										},
+									},
+									"required": []string{"sip_uri"},
+								},
+							},
+						},
+					},
+				},
 			},
 		}
 		if err := c.WriteJSON(setupMsg); err != nil {

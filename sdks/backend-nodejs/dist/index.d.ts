@@ -16,4 +16,11 @@ export declare class CPaaSClient {
     private client;
     constructor(config: CPaaSConfig);
     createConnectionToken(request: CreateTokenRequest): Promise<CreateTokenResponse>;
+    createTransferToken(roomId: string, agentName: string): Promise<{
+        token: string;
+        livekitUrl: string;
+    }>;
+    initiateSipTransfer(roomId: string, sipUri: string): Promise<{
+        success: boolean;
+    }>;
 }

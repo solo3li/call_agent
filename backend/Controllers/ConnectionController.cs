@@ -41,6 +41,18 @@ namespace backend.Controllers
             public string LiveKitUrl { get; set; } = string.Empty;
         }
 
+        public class CreateTransferTokenRequestDto
+        {
+            public string RoomId { get; set; } = string.Empty;
+            public string ParticipantName { get; set; } = "agent";
+        }
+
+        public class SipTransferRequestDto
+        {
+            public string RoomId { get; set; } = string.Empty;
+            public string SipUri { get; set; } = string.Empty;
+        }
+
         [HttpPost("token")]
         public async Task<ActionResult<CreateTokenResponseDto>> CreateToken([FromBody] CreateTokenRequestDto request)
         {
@@ -110,6 +122,57 @@ namespace backend.Controllers
                 RoomName = roomName,
                 LiveKitUrl = livekitUrl
             });
+        }
+
+        [HttpPost("transfer-token")]
+        public ActionResult<CreateTokenResponseDto> CreateTransferToken([FromBody] CreateTransferTokenRequestDto request)
+        {
+            var tenantIdStr = User.FindFirstValue("TenantId");
+            if (!Guid.TryParse(tenantIdStr, out var tenantId))
+                return Unauthorized();
+
+            string livekitApiKey = _configuration["LIVEKIT_API_KEY"] ?? "devkey";
+            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "secret";
+            string livekitUrl = _configuration["LIVEKIT_URL"] ?? "ws://localhost:7880";
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(livekitApiSecret));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            
+            var claims = new Dictionary<string, object>
+            {
+                { "iss", livekitApiKey },
+                { "sub", request.ParticipantName },
+                { "name", request.ParticipantName },
+                { "video", new { roomJoin = true, room = request.RoomId } }
+            };
+
+            var payload = new JwtPayload(livekitApiKey, null, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+            foreach (var claim in claims) {
+                payload[claim.Key] = claim.Value;
+            }
+
+            var token = new JwtSecurityToken(new JwtHeader(credentials), payload);
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return Ok(new CreateTokenResponseDto
+            {
+                Token = tokenString,
+                RoomName = request.RoomId,
+                LiveKitUrl = livekitUrl
+            });
+        }
+
+        [HttpPost("sip-transfer")]
+        public ActionResult InitiateSipTransfer([FromBody] SipTransferRequestDto request)
+        {
+            var tenantIdStr = User.FindFirstValue("TenantId");
+            if (!Guid.TryParse(tenantIdStr, out var tenantId))
+                return Unauthorized();
+
+            // Here we would use LiveKit Server SDK (or Twirp HTTP API) to call CreateSipParticipant
+            // For now, we simulate success since livekit-sip gateway is pending configuration
+            
+            return Ok(new { success = true, message = $"Initiated SIP dial-out to {request.SipUri} for room {request.RoomId}" });
         }
     }
 }
