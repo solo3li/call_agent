@@ -28,8 +28,6 @@ builder.Services.AddCors(options =>
 
 // Configure Asterisk Services
 builder.Services.Configure<backend.Models.AsteriskSettings>(builder.Configuration.GetSection("Asterisk"));
-builder.Services.AddHttpClient<backend.Services.AriRestService>();
-builder.Services.AddHostedService<backend.Services.AriEventService>();
 
 // Removed Google and Alibaba AI Services as they are now handled by the Golang Agent
 
