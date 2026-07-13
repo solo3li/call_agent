@@ -1,6 +1,6 @@
 {
   "name": "@solo3li/backend-node",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Node.js SDK for Voice AI CPaaS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
