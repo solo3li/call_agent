@@ -1,10 +1,20 @@
 
 > frontend@0.0.0 dev
-> vite
+> vite --host
 
+Port 5173 is in use, trying another one...
 
-  VITE v8.1.4  ready in 739 ms
+  VITE v8.1.4  ready in 445 ms
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: http://178.62.192.74:5174/
+  ➜  Network: http://10.18.0.5:5174/
+  ➜  Network: http://10.110.0.2:5174/
+  ➜  Network: http://172.20.0.1:5174/
+  ➜  Network: http://172.18.0.1:5174/
+  ➜  Network: http://10.42.0.0:5174/
+  ➜  Network: http://10.42.0.1:5174/
+  ➜  Network: http://172.19.0.1:5174/
+  ➜  Network: http://172.21.0.1:5174/
+  ➜  Network: http://172.22.0.1:5174/
   ➜  press h + enter to show help
