@@ -1,6 +1,6 @@
 {
   "name": "@solo3li/client-react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React hooks and components for Voice AI CPaaS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

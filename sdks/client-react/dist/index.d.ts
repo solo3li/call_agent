@@ -10,3 +10,11 @@ export declare const useOmniAgent: (options: OmniAgentOptions) => {
     isAgentSpeaking: boolean;
     disconnect: () => void;
 };
+export declare const useHumanAgent: (options: {
+    token: string;
+    livekitUrl: string;
+}) => {
+    isConnected: boolean;
+    isCustomerSpeaking: boolean;
+    disconnect: () => void;
+};
