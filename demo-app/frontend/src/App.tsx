@@ -43,7 +43,7 @@ function CustomerView() {
     try {
       setIsConnecting(true);
       setError(null);
-      const response = await fetch('http://localhost:4000/api/get-voice-token', {
+      const response = await fetch('http://178.62.192.74:4000/api/get-voice-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ participantName: 'Ahmed (Demo)' })
@@ -132,7 +132,7 @@ function AgentDashboard() {
     try {
       setIsConnecting(true);
       setError(null);
-      const response = await fetch('http://localhost:4000/api/get-transfer-token', {
+      const response = await fetch('http://178.62.192.74:4000/api/get-transfer-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId, agentName: 'Support Agent' })
