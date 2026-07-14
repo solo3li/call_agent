@@ -11,7 +11,7 @@ echo "Starting Golang Agent..."
 cd /root/call_agent/agent
 export LIVEKIT_URL=ws://127.0.0.1:7880
 export LIVEKIT_API_KEY=devkey
-export LIVEKIT_API_SECRET=secret
+export LIVEKIT_API_SECRET=livekit_secret_key_1234567890123
 export AI_API_KEY=dummy_key_for_test # We'll put a real one if needed, or it connects but fails API calls
 ./cpaas-agent > /root/call_agent/agent.log 2>&1 &
 
@@ -23,6 +23,6 @@ npm start > /root/call_agent/node_backend.log 2>&1 &
 # Start React Frontend
 echo "Starting React Frontend..."
 cd /root/call_agent/demo-app/frontend
-npm run dev -- --host > /root/call_agent/react_frontend.log 2>&1 &
+npm run dev -- --host 0.0.0.0 --port 3000 > /root/call_agent/react_frontend.log 2>&1 &
 
 echo "All services started in background. Logs are in /root/call_agent/*.log"

@@ -14,7 +14,7 @@ app.use(express.json());
 // Initialize CPaaS Client with API Key
 // In production, this comes from environment variables
 const cpaasApiKey = process.env.CPAAS_API_KEY || 'sk_test_123';
-const cpaasBaseUrl = process.env.CPAAS_BASE_URL || 'http://host.docker.internal:5000';
+const cpaasBaseUrl = process.env.CPAAS_BASE_URL || 'http://localhost:5246';
 
 const client = new CPaaSClient({
     apiKey: cpaasApiKey,
@@ -26,7 +26,7 @@ app.post('/api/get-voice-token', async (req, res) => {
         console.log('Generating voice token via CPaaS...');
         // Request a token for an agent
         const result = await client.createConnectionToken({
-            agentId: 'demo-agent-123',
+            agentId: '00000000-0000-0000-0000-000000000001',
             participantName: req.body.participantName || 'Guest User',
             metadata: {
                 context: 'SaaS Demo Application'
