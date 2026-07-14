@@ -3,6 +3,24 @@
 The official Node.js Server SDK for the **Voice AI CPaaS**. 
 This library allows SaaS backends to securely authenticate with the CPaaS API and generate short-lived LiveKit access tokens for their front-end users. It acts as a bridge between your application and the AI voice infrastructure.
 
+## 🏗 Architecture & Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as 💻 End User (Frontend)
+    participant Backend as ⚙️ Your SaaS Backend (Node SDK)
+    participant CPaaS as ☁️ Voice AI CPaaS (Core API)
+    participant LiveKit as 📡 LiveKit Server (WebRTC)
+
+    Client->>Backend: Request to start AI call (e.g., POST /api/get-voice-token)
+    Backend->>CPaaS: createConnectionToken(AgentId, ParticipantName)
+    CPaaS-->>Backend: Returns secure JWT Token & WebSocket URL
+    Backend-->>Client: Passes Token & URL to the Frontend
+    Client->>LiveKit: Connects directly using the React SDK
+    LiveKit-->>Client: Real-time two-way voice stream begins!
+```
+
 ## 📦 Installation
 
 Install the package via npm:
