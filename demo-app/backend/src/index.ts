@@ -41,6 +41,24 @@ app.post('/api/get-voice-token', async (req, res) => {
     }
 });
 
+app.post('/api/get-transfer-token', async (req, res) => {
+    try {
+        const { roomId, agentName } = req.body;
+        if (!roomId) {
+            return res.status(400).json({ error: 'roomId is required' });
+        }
+        
+        console.log(`Generating transfer token for room ${roomId}...`);
+        const result = await client.createTransferToken(roomId, agentName || 'Human Agent');
+        
+        console.log('Transfer Token generated successfully!');
+        res.json(result);
+    } catch (error: any) {
+        console.error('Failed to generate transfer token:', error?.message || error);
+        res.status(500).json({ error: 'Failed to generate transfer token' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`🚀 Customer Backend is running on port ${port}`);
     console.log(`🔑 Connected to CPaaS at: ${cpaasBaseUrl}`);

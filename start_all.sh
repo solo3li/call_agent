@@ -23,6 +23,6 @@ npm start > /root/call_agent/node_backend.log 2>&1 &
 # Start React Frontend
 echo "Starting React Frontend..."
 cd /root/call_agent/demo-app/frontend
-npm start > /root/call_agent/react_frontend.log 2>&1 &
+npm run dev > /root/call_agent/react_frontend.log 2>&1 &
 
 echo "All services started in background. Logs are in /root/call_agent/*.log"
