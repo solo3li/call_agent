@@ -1,8 +1,15 @@
-2026/07/14 00:12:10 CPaaS AI Auto-Scaling Worker listening on :8080
-2026/07/14 00:12:18 Starting Agent for Room: test, Provider: gemini
-2026/07/14 00:12:18 Connecting to Gemini Live API...
-2026/07/14 00:12:18 Connected to Gemini WebSockets!
-2026/07/14 00:12:18 Sent Setup message with System Prompt length: 5
-2026/07/14 00:12:18 Gemini read error: websocket: close 1007 (invalid payload data): API key not valid. Please pass a valid API key.
-2026/07/14 00:12:20 AI Agent successfully joined LiveKit room: test
-2026/07/14 00:12:20 "level"=0 "msg"="published track" "name"="ai-response" "source"="MICROPHONE"
+2026/07/14 00:48:30 CPaaS AI Auto-Scaling Worker listening on :8080
+2026/07/14 00:48:43 Starting Agent for Room: room_71ddd10f71, Provider: Gemini
+2026/07/14 00:48:43 Connecting to Gemini Live API...
+2026/07/14 00:48:43 Connected to Gemini WebSockets!
+2026/07/14 00:48:43 Sent Setup message with System Prompt length: 27
+2026/07/14 00:48:43 "msg"="error establishing signal connection" "error"="websocket: bad handshake" "status"=401
+2026/07/14 00:48:43 Gemini read error: websocket: close 1007 (invalid payload data): API key not valid. Please pass a valid API key.
+2026/07/14 00:48:43 Could not connect to LiveKit: unauthorized: invalid token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODQwMTE3MjMsImlzcyI6ImRldmtleSIsImtpbmQiOiJzdGFuZGFyZCIsIm5iZiI6MTc4Mzk5MDEyMywic3ViIjoiYWktYWdlbnQiLCJ2aWRlbyI6eyJyb29tIjoicm9vbV83MWRkZDEwZjcxIiwicm9vbUpvaW4iOnRydWV9fQ.-kK3kVxqMKM-Jt1H8_fLxL0S_LWadAlPPRCZZk9yuks, error: token signature is invalid: signature is invalid
+2026/07/14 00:53:56 Starting Agent for Room: room_5ff5d940d7, Provider: Gemini
+2026/07/14 00:53:56 Connecting to Gemini Live API...
+2026/07/14 00:53:56 Connected to Gemini WebSockets!
+2026/07/14 00:53:56 Sent Setup message with System Prompt length: 27
+2026/07/14 00:53:56 "msg"="error establishing signal connection" "error"="websocket: bad handshake" "status"=401
+2026/07/14 00:53:56 Could not connect to LiveKit: unauthorized: invalid token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODQwMTIwMzYsImlzcyI6ImRldmtleSIsImtpbmQiOiJzdGFuZGFyZCIsIm5iZiI6MTc4Mzk5MDQzNiwic3ViIjoiYWktYWdlbnQiLCJ2aWRlbyI6eyJyb29tIjoicm9vbV81ZmY1ZDk0MGQ3Iiwicm9vbUpvaW4iOnRydWV9fQ.M0PYBPOy78S4gyP1c_YqqXdqocpLZmn3fVdgvlXEMHc, error: token signature is invalid: signature is invalid
+2026/07/14 00:53:56 Gemini read error: read tcp 178.62.192.74:38482->216.239.36.223:443: use of closed network connection

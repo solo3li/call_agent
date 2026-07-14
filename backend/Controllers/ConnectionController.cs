@@ -67,7 +67,7 @@ namespace backend.Controllers
 
             string roomName = $"room_{Guid.NewGuid().ToString("N").Substring(0, 10)}";
             string livekitApiKey = _configuration["LIVEKIT_API_KEY"] ?? "devkey";
-            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "secret";
+            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "livekit_secret_key_1234567890123";
             string livekitUrl = _configuration["LIVEKIT_URL"] ?? "ws://localhost:7880";
 
             // 1. Generate LiveKit JWT Token manually
@@ -79,7 +79,7 @@ namespace backend.Controllers
                 { "iss", livekitApiKey },
                 { "sub", request.ParticipantName },
                 { "name", request.ParticipantName },
-                { "video", new { roomJoin = true, room = roomName } }
+                { "video", new Dictionary<string, object> { { "roomJoin", true }, { "room", roomName } } }
             };
 
             var payload = new JwtPayload(livekitApiKey, null, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
@@ -132,7 +132,7 @@ namespace backend.Controllers
                 return Unauthorized();
 
             string livekitApiKey = _configuration["LIVEKIT_API_KEY"] ?? "devkey";
-            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "secret";
+            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "livekit_secret_key_1234567890123";
             string livekitUrl = _configuration["LIVEKIT_URL"] ?? "ws://localhost:7880";
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(livekitApiSecret));
@@ -143,7 +143,7 @@ namespace backend.Controllers
                 { "iss", livekitApiKey },
                 { "sub", request.ParticipantName },
                 { "name", request.ParticipantName },
-                { "video", new { roomJoin = true, room = request.RoomId } }
+                { "video", new Dictionary<string, object> { { "roomJoin", true }, { "room", request.RoomId } } }
             };
 
             var payload = new JwtPayload(livekitApiKey, null, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
