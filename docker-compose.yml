@@ -31,6 +31,20 @@ services:
     volumes:
       - minio_data:/data
 
+  livekit-sip:
+    image: livekit/sip:latest
+    environment:
+      LIVEKIT_URL: ws://host.docker.internal:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      SIP_PORT: 5060
+    ports:
+      - "5061:5060/udp"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+
 volumes:
   postgres_data:
   redis_data:
