@@ -1,0 +1,8 @@
+2026/07/14 00:12:10 CPaaS AI Auto-Scaling Worker listening on :8080
+2026/07/14 00:12:18 Starting Agent for Room: test, Provider: gemini
+2026/07/14 00:12:18 Connecting to Gemini Live API...
+2026/07/14 00:12:18 Connected to Gemini WebSockets!
+2026/07/14 00:12:18 Sent Setup message with System Prompt length: 5
+2026/07/14 00:12:18 Gemini read error: websocket: close 1007 (invalid payload data): API key not valid. Please pass a valid API key.
+2026/07/14 00:12:20 AI Agent successfully joined LiveKit room: test
+2026/07/14 00:12:20 "level"=0 "msg"="published track" "name"="ai-response" "source"="MICROPHONE"
