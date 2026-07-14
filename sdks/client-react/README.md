@@ -3,6 +3,23 @@
 The official React SDK for connecting your web applications to the **Voice AI CPaaS**. 
 This library provides seamless React Hooks (`useOmniAgent` and `useHumanAgent`) to handle WebRTC connections, audio routing, state management, and human-handoff for your AI Voice Agents.
 
+## 🏗 Workflow & Integration
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant React as ⚛️ React App (Client SDK)
+    participant Backend as ⚙️ Your Backend
+    participant LiveKit as 📡 LiveKit Server (WebRTC)
+    participant AI as 🤖 AI Agent
+
+    React->>Backend: 1. Fetch connection token (fetch)
+    Backend-->>React: 2. Returns JWT Token & LiveKit URL
+    React->>LiveKit: 3. useOmniAgent() establishes connection
+    LiveKit->>AI: 4. AI Agent is summoned to the room
+    AI-->>React: 5. 🗣️ AI starts speaking (isAgentSpeaking = true)
+```
+
 ## 📦 Installation
 
 ```bash
