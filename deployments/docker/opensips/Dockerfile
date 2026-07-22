@@ -2,11 +2,10 @@ FROM opensips/opensips:3.5
 
 # Install extra modules needed for CPaaS
 RUN apt-get update && apt-get install -y \
-    opensips-db-modules \
+    opensips-postgres-module \
     opensips-http-modules \
     opensips-json-module \
     opensips-tls-module \
-    opensips-rtpengine-module \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy config files
