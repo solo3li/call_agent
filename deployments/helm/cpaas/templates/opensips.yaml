@@ -1,0 +1,148 @@
+{{- if .Values.opensips.enabled }}
+---
+# ── OpenSIPS Deployment ──────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensips
+  namespace: {{ .Values.global.namespaces.voipEdge }}
+  labels:
+    app: opensips
+    {{- include "cpaas.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.opensips.replicaCount }}
+  selector:
+    matchLabels:
+      app: opensips
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: opensips
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.opensips.ports.mi }}"
+        # Force pod restart when config changes
+        checksum/config: {{ include (print $.Template.BasePath "/opensips-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: opensips
+          image: "{{ .Values.opensips.image.repository }}:{{ .Values.opensips.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: sip-udp
+              containerPort: {{ .Values.opensips.ports.sip }}
+              protocol: UDP
+            - name: sip-tcp
+              containerPort: {{ .Values.opensips.ports.sip }}
+              protocol: TCP
+            - name: mi-http
+              containerPort: {{ .Values.opensips.ports.mi }}
+              protocol: TCP
+            - name: hep-udp
+              containerPort: {{ .Values.opensips.ports.hep }}
+              protocol: UDP
+          env:
+            - name: OPENSIPS_DB_HOST
+              value: "postgresql.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: OPENSIPS_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-opensips-secrets
+                  key: db-password
+            {{- include "cpaas.internalKeyEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.opensips.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /mi/which
+              port: {{ .Values.opensips.ports.mi }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /mi/which
+              port: {{ .Values.opensips.ports.mi }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: opensips-config
+              mountPath: /etc/opensips/opensips.cfg
+              subPath: opensips.cfg
+            - name: opensips-config
+              mountPath: /etc/opensips/dispatcher.list
+              subPath: dispatcher.list
+      volumes:
+        - name: opensips-config
+          configMap:
+            name: opensips-config
+---
+# ── OpenSIPS Service (LoadBalancer via MetalLB) ──────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensips-sip
+  namespace: {{ .Values.global.namespaces.voipEdge }}
+  labels:
+    app: opensips
+  annotations:
+    metallb.universe.tf/address-pool: voip-pool
+spec:
+  type: LoadBalancer
+  selector:
+    app: opensips
+  ports:
+    - name: sip-udp
+      port: {{ .Values.opensips.ports.sip }}
+      targetPort: {{ .Values.opensips.ports.sip }}
+      protocol: UDP
+    - name: sip-tcp
+      port: {{ .Values.opensips.ports.sip }}
+      targetPort: {{ .Values.opensips.ports.sip }}
+      protocol: TCP
+    - name: hep
+      port: {{ .Values.opensips.ports.hep }}
+      targetPort: {{ .Values.opensips.ports.hep }}
+      protocol: UDP
+  externalTrafficPolicy: Local
+---
+# ── OpenSIPS Internal Service (Management Interface) ─────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensips-mi
+  namespace: {{ .Values.global.namespaces.voipEdge }}
+spec:
+  type: ClusterIP
+  selector:
+    app: opensips
+  ports:
+    - port: {{ .Values.opensips.ports.mi }}
+      targetPort: {{ .Values.opensips.ports.mi }}
+---
+{{- if .Values.opensips.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: opensips-hpa
+  namespace: {{ .Values.global.namespaces.voipEdge }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: opensips
+  minReplicas: {{ .Values.opensips.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.opensips.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.opensips.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}

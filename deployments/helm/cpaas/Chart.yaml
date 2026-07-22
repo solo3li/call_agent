@@ -1,19 +1,58 @@
 apiVersion: v2
 name: cpaas
-description: A Helm chart for Omni-Industry Voice AI CPaaS
+description: |
+  Omni-Industry Voice AI CPaaS Platform
+  Architecture v2.0: OpenSIPS + rtpengine + FreeSWITCH + LiveKit + MetalLB + Traefik
 type: application
-version: 0.1.0
-appVersion: "1.0.0"
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - voip
+  - ai
+  - cpaas
+  - freeswitch
+  - opensips
+  - livekit
+  - gemini
+maintainers:
+  - name: CPaaS Team
+
 dependencies:
+  # ── Data Layer ──────────────────────────────────────
   - name: postgresql
-    version: 13.x.x
+    version: "15.x.x"
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
-  - name: minio
-    version: 12.x.x
-    repository: https://charts.bitnami.com/bitnami
-    condition: minio.enabled
+    alias: postgresql
+
   - name: redis
-    version: 19.x.x
+    version: "20.x.x"
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
+    alias: redis
+
+  - name: minio
+    version: "14.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: minio.enabled
+    alias: minio
+
+  # ── Ingress & Load Balancing ─────────────────────────
+  - name: traefik
+    version: "28.x.x"
+    repository: https://helm.traefik.io/traefik
+    condition: traefik.enabled
+    alias: traefik
+
+  - name: metallb
+    version: "0.14.x"
+    repository: https://metallb.github.io/metallb
+    condition: metallb.enabled
+    alias: metallb
+
+  # ── LiveKit ──────────────────────────────────────────
+  - name: livekit-helm
+    version: "1.x.x"
+    repository: https://helm.livekit.io
+    condition: livekit.enabled
+    alias: livekit

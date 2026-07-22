@@ -1,0 +1,131 @@
+{{- if .Values.freeswitch.enabled }}
+---
+# ── FreeSWITCH StatefulSet ───────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: freeswitch
+  namespace: {{ .Values.global.namespaces.voipCore }}
+  labels:
+    app: freeswitch
+    {{- include "cpaas.labels" . | nindent 4 }}
+spec:
+  serviceName: freeswitch-hs
+  replicas: {{ .Values.freeswitch.replicaCount }}
+  selector:
+    matchLabels:
+      app: freeswitch
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: freeswitch
+    spec:
+      terminationGracePeriodSeconds: 300
+      containers:
+        - name: freeswitch
+          image: "{{ .Values.freeswitch.image.repository }}:{{ .Values.freeswitch.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: sip-ext-udp
+              containerPort: {{ .Values.freeswitch.ports.sipExternal }}
+              protocol: UDP
+            - name: sip-ext-tcp
+              containerPort: {{ .Values.freeswitch.ports.sipExternal }}
+              protocol: TCP
+            - name: sip-int
+              containerPort: {{ .Values.freeswitch.ports.sipInternal }}
+              protocol: UDP
+            - name: esl
+              containerPort: {{ .Values.freeswitch.ports.esl }}
+              protocol: TCP
+          env:
+            - name: BACKEND_API_URL
+              value: {{ include "cpaas.backendURL" . }}
+            - name: FREESWITCH_DOMAIN
+              value: {{ .Values.freeswitch.domain | quote }}
+            - name: ESL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-freeswitch-secrets
+                  key: esl-password
+            - name: SIP_TRUNK_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-freeswitch-secrets
+                  key: sip-trunk-host
+            {{- include "cpaas.internalKeyEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.freeswitch.resources | nindent 12 }}
+          livenessProbe:
+            exec:
+              command: ["fs_cli", "-x", "status"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.freeswitch.ports.sipExternal }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: freeswitch-config
+              mountPath: /etc/freeswitch
+            - name: freeswitch-logs
+              mountPath: /var/log/freeswitch
+      volumes:
+        - name: freeswitch-config
+          configMap:
+            name: freeswitch-config
+  volumeClaimTemplates:
+    - metadata:
+        name: freeswitch-logs
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.freeswitch.persistence.logs.storageClass }}
+        storageClassName: {{ .Values.freeswitch.persistence.logs.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.freeswitch.persistence.logs.size }}
+---
+# ── FreeSWITCH Headless Service (for StatefulSet stable DNS) ─────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: freeswitch-hs
+  namespace: {{ .Values.global.namespaces.voipCore }}
+spec:
+  clusterIP: None
+  selector:
+    app: freeswitch
+  ports:
+    - name: sip-ext
+      port: {{ .Values.freeswitch.ports.sipExternal }}
+      protocol: UDP
+    - name: esl
+      port: {{ .Values.freeswitch.ports.esl }}
+      protocol: TCP
+---
+# ── FreeSWITCH ClusterIP Service (for Go Agent ESL access) ──────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: freeswitch-svc
+  namespace: {{ .Values.global.namespaces.voipCore }}
+spec:
+  type: ClusterIP
+  selector:
+    app: freeswitch
+  ports:
+    - name: sip-ext-udp
+      port: {{ .Values.freeswitch.ports.sipExternal }}
+      targetPort: {{ .Values.freeswitch.ports.sipExternal }}
+      protocol: UDP
+    - name: esl
+      port: {{ .Values.freeswitch.ports.esl }}
+      targetPort: {{ .Values.freeswitch.ports.esl }}
+      protocol: TCP
+{{- end }}

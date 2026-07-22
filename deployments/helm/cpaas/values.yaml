@@ -1,25 +1,308 @@
-domain: cpaas.178.62.192.74.nip.io
-replicaCount: 1
+##########################################################
+# CPaaS Helm Chart — values.yaml
+# Architecture v2.0: OpenSIPS + rtpengine + FreeSWITCH + LiveKit
+#
+# Override per environment:
+#   helm upgrade --install cpaas . -f values-prod.yaml
+##########################################################
 
-imagePullPolicy: IfNotPresent
+# ── Global ──────────────────────────────────────────────────────
+global:
+  # Your domain (used for Traefik Ingress routes)
+  domain: "cpaas.example.com"
+  # Image pull policy: Always (prod) | IfNotPresent (dev)
+  imagePullPolicy: IfNotPresent
+  # Image registry prefix (leave empty for local images)
+  imageRegistry: ""
+  # Internal shared secret between all services
+  internalApiKey: "CHANGE_ME_INTERNAL_KEY"
+  # Namespace overrides (defaults to chart defaults)
+  namespaces:
+    voipEdge: "voip-edge"
+    voipCore: "voip-core"
+    aiEngine: "ai-engine"
+    controlPlane: "control-plane"
+    data: "cpaas-data"
+    monitoring: "monitoring"
 
-frontend:
-  image: cpaas-frontend:latest
-  port: 3000
+# ── MetalLB ─────────────────────────────────────────────────────
+metallb:
+  enabled: true
+  ipAddressPools:
+    voip:
+      name: voip-pool
+      addresses:
+        - "192.168.1.200-192.168.1.210"   # CHANGE to your network
+    web:
+      name: web-pool
+      addresses:
+        - "192.168.1.220-192.168.1.230"   # CHANGE to your network
 
+# ── Traefik ─────────────────────────────────────────────────────
+traefik:
+  enabled: true
+  service:
+    type: LoadBalancer
+    annotations:
+      metallb.universe.tf/address-pool: web-pool
+  ingressRoute:
+    dashboard:
+      enabled: false   # Disable Traefik dashboard in production
+  additionalArguments:
+    - "--certificatesresolvers.letsencrypt.acme.email=ssl@example.com"
+    - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+    - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    - "--entrypoints.web.address=:80"
+    - "--entrypoints.websecure.address=:443"
+  ports:
+    web:
+      port: 80
+      expose: true
+    websecure:
+      port: 443
+      expose: true
+      tls:
+        certResolver: letsencrypt
+
+# ── OpenSIPS ────────────────────────────────────────────────────
+opensips:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: cpaas/opensips
+    tag: "3.5"
+  service:
+    type: LoadBalancer
+    annotations:
+      metallb.universe.tf/address-pool: voip-pool
+      metallb.universe.tf/loadBalancerIPs: "192.168.1.200"
+  ports:
+    sip: 5060
+    hep: 9060
+    mi: 8888
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  config:
+    # Reference to FreeSWITCH StatefulSet headless service
+    freeswitchDNS: "freeswitch-hs.voip-core.svc.cluster.local"
+    freeswitchPort: 5080
+    rtpengineDNS: "rtpengine-svc.voip-edge.svc.cluster.local"
+    rtpenginePort: 22222
+
+# ── rtpengine ───────────────────────────────────────────────────
+rtpengine:
+  enabled: true
+  # DaemonSet: runs on every node labeled node-role=voip
+  nodeSelector:
+    node-role: "voip"
+  ports:
+    ngControl: 22222
+    rtpMin: 20000
+    rtpMax: 30000
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+
+# ── FreeSWITCH ──────────────────────────────────────────────────
+freeswitch:
+  enabled: true
+  replicaCount: 2   # StatefulSet
+  image:
+    repository: cpaas/freeswitch
+    tag: "1.10"
+  domain: "freeswitch.cpaas.local"
+  ports:
+    sipExternal: 5080
+    sipInternal: 5060
+    esl: 8021
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "4000m"
+      memory: "4Gi"
+  persistence:
+    logs:
+      size: "10Gi"
+      storageClass: ""
+  # ESL password — override via --set or secrets
+  eslPassword: "CHANGE_ME_ESL_PASSWORD"
+
+# ── LiveKit Server ───────────────────────────────────────────────
+livekit:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: livekit/livekit-server
+    tag: "latest"
+  apiKey: "CHANGE_ME_LK_KEY"
+  apiSecret: "CHANGE_ME_LK_SECRET_32_CHARS_MIN"
+  rtcConfig:
+    tcpPort: 7881
+    portRangeStart: 50000
+    portRangeEnd: 60000
+    useExternalIP: true
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+  webhook:
+    apiKey: "CHANGE_ME_LK_KEY"
+    urls:
+      - "http://backend-api.control-plane.svc.cluster.local:8080/api/webhook/livekit"
+
+# ── LiveKit SIP Gateway ──────────────────────────────────────────
+livekitSip:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: livekit/sip
+    tag: "latest"
+  port: 5060
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+# ── Go AI Agent ──────────────────────────────────────────────────
+goAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: cpaas/go-agent
+    tag: "2.0.0"
+  port: 8080
+  aiProvider: "gemini"
+  geminiApiKey: "CHANGE_ME_GEMINI_KEY"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 50
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+# ── ASP.NET Backend ──────────────────────────────────────────────
 backend:
-  image: cpaas-backend:latest
-  port: 8080 # ASP.NET default Docker port is 8080 in .NET 8
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: cpaas/backend
+    tag: "2.0.0"
+  port: 8080
+  jwt:
+    key: "CHANGE_ME_JWT_KEY_32_CHARS_MINIMUM"
+    issuer: "cpaas-auth"
+    audience: "cpaas-frontend"
+  ingress:
+    host: "api.cpaas.example.com"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
 
+# ── React Frontend ───────────────────────────────────────────────
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: cpaas/frontend
+    tag: "2.0.0"
+  port: 80
+  ingress:
+    host: "app.cpaas.example.com"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+# ── PostgreSQL (Bitnami) ─────────────────────────────────────────
 postgresql:
-  enabled: false
+  enabled: true
   auth:
-    username: postgres
-    password: postgres
-    database: cpaas_db
+    username: "cpaas"
+    password: "CHANGE_ME_PG_PASS"
+    database: "cpaas_db"
+  primary:
+    persistence:
+      size: "20Gi"
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+  readReplicas:
+    replicaCount: 1
 
+# ── Redis (Bitnami) ──────────────────────────────────────────────
 redis:
-  enabled: false
+  enabled: true
+  auth:
+    enabled: true
+    password: "CHANGE_ME_REDIS_PASS"
+  architecture: standalone
+  master:
+    persistence:
+      size: "8Gi"
 
+# ── MinIO (Bitnami) ──────────────────────────────────────────────
 minio:
-  enabled: false
+  enabled: true
+  auth:
+    rootUser: "admin"
+    rootPassword: "CHANGE_ME_MINIO_PASS"
+  defaultBuckets: "recordings,knowledge-base"
+  persistence:
+    size: "50Gi"
+
+# ── Monitoring ───────────────────────────────────────────────────
+monitoring:
+  prometheus:
+    enabled: true
+    retention: "30d"
+  grafana:
+    enabled: true
+    adminPassword: "CHANGE_ME_GRAFANA_PASS"
+    dashboards:
+      voip: true
+      ai: true
