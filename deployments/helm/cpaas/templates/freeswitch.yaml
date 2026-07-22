@@ -71,14 +71,8 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
           volumeMounts:
-            - name: freeswitch-config
-              mountPath: /etc/freeswitch
             - name: freeswitch-logs
               mountPath: /var/log/freeswitch
-      volumes:
-        - name: freeswitch-config
-          configMap:
-            name: freeswitch-config
   volumeClaimTemplates:
     - metadata:
         name: freeswitch-logs

@@ -135,15 +135,25 @@ deploy_helm() {
     # Build Helm dependencies
     helm dependency update "${HELM_CHART}"
 
-    # Extra values files
     EXTRA_VALUES=""
     if [ -f "${VALUES_ENV_FILE}" ]; then
         EXTRA_VALUES="-f ${VALUES_ENV_FILE}"
         log_info "Using environment values: ${VALUES_ENV_FILE}"
     fi
 
+    # Pre-install MetalLB
+    log_info "Deploying MetalLB..."
+    helm upgrade --install metallb metallb/metallb \
+        --namespace metallb-system --create-namespace \
+        --wait --timeout 3m
+    
+    # Wait a bit for webhook to be ready, then apply IPAddressPools
+    sleep 10
+    kubectl apply -f "${HELM_CHART}/metallb-config.yaml"
+
+
     # Deploy
-    helm "${ACTION}" "${HELM_RELEASE}" "${HELM_CHART}" \
+    helm upgrade --install "${HELM_RELEASE}" "${HELM_CHART}" \
         -f "${VALUES_FILE}" \
         ${EXTRA_VALUES} \
         --create-namespace \

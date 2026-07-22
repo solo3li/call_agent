@@ -44,14 +44,8 @@ dependencies:
     condition: traefik.enabled
     alias: traefik
 
-  - name: metallb
-    version: "0.14.x"
-    repository: https://metallb.github.io/metallb
-    condition: metallb.enabled
-    alias: metallb
-
   # ── LiveKit ──────────────────────────────────────────
-  - name: livekit-helm
+  - name: livekit-server
     version: "1.x.x"
     repository: https://helm.livekit.io
     condition: livekit.enabled
