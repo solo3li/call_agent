@@ -1,46 +1,124 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+---
+# ── Traefik IngressRoute — ASP.NET Backend API ───────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  name: {{ .Release.Name }}-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
-    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+  name: cpaas-api
+  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
-  ingressClassName: traefik
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.backend.ingress.host }}`)
+      kind: Rule
+      services:
+        - name: backend-api
+          port: {{ .Values.backend.port }}
+      middlewares:
+        - name: cpaas-cors
+        - name: cpaas-ratelimit
   tls:
-    - hosts:
-        - {{ .Values.domain }}
-      secretName: {{ .Release.Name }}-tls
-  rules:
-    - host: {{ .Values.domain }}
-      http:
-        paths:
-          - path: /api/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}-backend
-                port:
-                  number: 80
-          - path: /scalar
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}-backend
-                port:
-                  number: 80
-          - path: /swagger
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}-backend
-                port:
-                  number: 80
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}-frontend
-                port:
-                  number: 80
+    certResolver: letsencrypt
+---
+# ── Traefik IngressRoute — React Frontend ────────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-frontend
+  namespace: {{ .Values.global.namespaces.controlPlane }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.frontend.ingress.host }}`)
+      kind: Rule
+      services:
+        - name: frontend
+          port: {{ .Values.frontend.port }}
+  tls:
+    certResolver: letsencrypt
+---
+# ── Traefik IngressRoute — LiveKit WebSocket ─────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-livekit-ws
+  namespace: {{ .Values.global.namespaces.aiEngine }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ws.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+        - name: livekit-server
+          port: 7880
+      middlewares:
+        - name: cpaas-websocket
+  tls:
+    certResolver: letsencrypt
+---
+# ── HTTP → HTTPS Redirect ────────────────────────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-http-redirect
+  namespace: {{ .Values.global.namespaces.controlPlane }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: HostRegexp(`{host:.+}`)
+      kind: Rule
+      middlewares:
+        - name: cpaas-https-redirect
+      services:
+        - name: backend-api
+          port: {{ .Values.backend.port }}
+---
+# ── Middlewares ───────────────────────────────────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cpaas-cors
+  namespace: {{ .Values.global.namespaces.controlPlane }}
+spec:
+  headers:
+    accessControlAllowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    accessControlAllowHeaders: ["*"]
+    accessControlAllowOriginList:
+      - "https://{{ .Values.frontend.ingress.host }}"
+      - "https://{{ .Values.backend.ingress.host }}"
+    accessControlMaxAge: 100
+    addVaryHeader: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cpaas-ratelimit
+  namespace: {{ .Values.global.namespaces.controlPlane }}
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+    period: 1m
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cpaas-https-redirect
+  namespace: {{ .Values.global.namespaces.controlPlane }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cpaas-websocket
+  namespace: {{ .Values.global.namespaces.aiEngine }}
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"

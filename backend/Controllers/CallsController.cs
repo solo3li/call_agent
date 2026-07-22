@@ -30,10 +30,16 @@ namespace backend.Controllers
             public string CallerNumber { get; set; } = string.Empty;
             public string CalledNumber { get; set; } = string.Empty;
             public DateTime StartTime { get; set; }
-            public int Duration { get; set; }
-            public decimal Cost { get; set; }
+            public DateTime? EndTime { get; set; }
+            public int DurationSeconds { get; set; }
+            public decimal CostUsd { get; set; }
             public string Status { get; set; } = string.Empty;
-            public string Transcript { get; set; } = string.Empty;
+            public string? HangupCause { get; set; }
+            public string? Sentiment { get; set; }
+            public string? TransferredTo { get; set; }
+            public string? Transcript { get; set; }
+            public string Direction { get; set; } = "inbound";
+            public string? RoomName { get; set; }
         }
 
         [HttpGet]
@@ -54,10 +60,16 @@ namespace backend.Controllers
                     CallerNumber = c.CallerNumber,
                     CalledNumber = c.CalledNumber,
                     StartTime = c.StartTime,
-                    Duration = c.Duration,
-                    Cost = c.Cost,
+                    EndTime = c.EndTime,
+                    DurationSeconds = c.DurationSeconds,
+                    CostUsd = c.CostUsd,
                     Status = c.Status,
-                    Transcript = c.Transcript
+                    HangupCause = c.HangupCause,
+                    Sentiment = c.Sentiment,
+                    TransferredTo = c.TransferredTo,
+                    Transcript = c.Transcript,
+                    Direction = c.Direction,
+                    RoomName = c.RoomName
                 })
                 .ToListAsync();
 
