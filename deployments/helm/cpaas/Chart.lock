@@ -1,12 +1,18 @@
 dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 13.4.4
-- name: minio
-  repository: https://charts.bitnami.com/bitnami
-  version: 12.13.2
+  version: 15.5.38
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 19.6.4
-digest: sha256:df90c63ff2a30e58e7540a7f26143f68e117dae7779082d00355139365224d18
-generated: "2026-07-11T19:55:27.665838379Z"
+  version: 20.13.4
+- name: minio
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.10.5
+- name: traefik
+  repository: https://helm.traefik.io/traefik
+  version: 28.3.0
+- name: livekit-server
+  repository: https://helm.livekit.io
+  version: 1.9.0
+digest: sha256:768490ca366e83092fa90561097a0eaaa6a8b2e354768c32ddf39ce0a05af687
+generated: "2026-07-22T23:38:45.721951815Z"
