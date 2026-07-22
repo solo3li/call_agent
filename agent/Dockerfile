@@ -1,7 +1,7 @@
 FROM golang:1.22-alpine AS builder
 
 # Install build dependencies for Opus
-RUN apk add --no-cache gcc musl-dev opus-dev
+RUN apk add --no-cache gcc musl-dev opus-dev opusfile-dev pkgconf
 
 WORKDIR /app
 

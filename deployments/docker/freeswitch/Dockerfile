@@ -1,43 +1,10 @@
-FROM debian:bookworm-slim AS builder
+FROM safarov/freeswitch:latest
 
-# Build FreeSWITCH from source for full control
-RUN apt-get update && apt-get install -y \
-    gnupg2 wget curl lsb-release \
-    && rm -rf /var/lib/apt/lists/*
-
-# Use official FreeSWITCH 1.10 Debian packages
-RUN wget -O - https://files.freeswitch.org/repo/deb/debian-release/fsstretch-archive-keyring.asc | apt-key add - \
-    && echo "deb http://files.freeswitch.org/repo/deb/debian-release/ bookworm main" > /etc/apt/sources.list.d/freeswitch.list
-
-FROM debian:bookworm-slim
-
-# Install FreeSWITCH + required modules
-RUN apt-get update && apt-get install -y \
-    freeswitch \
-    freeswitch-mod-sofia \
-    freeswitch-mod-commands \
-    freeswitch-mod-dialplan-xml \
-    freeswitch-mod-dptools \
-    freeswitch-mod-curl \
-    freeswitch-mod-event-socket \
-    freeswitch-mod-json-cdr \
-    freeswitch-mod-opus \
-    freeswitch-mod-g711 \
-    freeswitch-mod-g722 \
-    freeswitch-mod-sndfile \
-    freeswitch-mod-tone-stream \
-    freeswitch-mod-native-file \
-    freeswitch-mod-say-en \
-    freeswitch-mod-say-ar \
-    freeswitch-mod-lua \
-    freeswitch-mod-xml-curl \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create required directories
+# Create required directories (if missing)
 RUN mkdir -p /etc/freeswitch /var/log/freeswitch /var/lib/freeswitch/recordings
 
 # Copy all config files
+
 COPY conf/ /etc/freeswitch/
 
 # Copy entrypoint
