@@ -1,0 +1,298 @@
+---
+# LiveKit Server — WebRTC SFU
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit-server
+  namespace: ai-engine
+  labels:
+    app: livekit-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: livekit-server
+  template:
+    metadata:
+      labels:
+        app: livekit-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "6789"
+    spec:
+      containers:
+        - name: livekit-server
+          image: livekit/livekit-server:latest
+          args:
+            - --config
+            - /etc/livekit/livekit-server.yaml
+          ports:
+            - name: api
+              containerPort: 7880
+            - name: rtc-tcp
+              containerPort: 7881
+            - name: metrics
+              containerPort: 6789
+          env:
+            - name: LIVEKIT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: api-key
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: api-secret
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          volumeMounts:
+            - name: livekit-config
+              mountPath: /etc/livekit
+      volumes:
+        - name: livekit-config
+          configMap:
+            name: livekit-config
+---
+# LiveKit SIP Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit-sip
+  namespace: ai-engine
+  labels:
+    app: livekit-sip
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: livekit-sip
+  template:
+    metadata:
+      labels:
+        app: livekit-sip
+    spec:
+      containers:
+        - name: livekit-sip
+          image: livekit/sip:latest
+          ports:
+            - name: sip-udp
+              containerPort: 5060
+              protocol: UDP
+            - name: sip-tcp
+              containerPort: 5060
+              protocol: TCP
+          env:
+            - name: LIVEKIT_URL
+              value: "ws://livekit-server.ai-engine.svc.cluster.local:7880"
+            - name: LIVEKIT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: api-key
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: api-secret
+            - name: SIP_PORT
+              value: "5060"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: livekit-sip-config
+              mountPath: /etc/livekit-sip
+      volumes:
+        - name: livekit-sip-config
+          configMap:
+            name: livekit-sip-config
+---
+# Go AI Agent — HPA-enabled for auto-scaling
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-agent
+  namespace: ai-engine
+  labels:
+    app: go-agent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: go-agent
+  template:
+    metadata:
+      labels:
+        app: go-agent
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: go-agent
+          image: cpaas/go-agent:latest
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: LIVEKIT_URL
+              value: "ws://livekit-server.ai-engine.svc.cluster.local:7880"
+            - name: LIVEKIT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: api-key
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: api-secret
+            - name: AI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secrets
+                  key: gemini-api-key
+            - name: FREESWITCH_ESL_HOST
+              value: "freeswitch-svc.voip-core.svc.cluster.local:8021"
+            - name: FREESWITCH_ESL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secrets
+                  key: esl-password
+            - name: BACKEND_API_URL
+              value: "http://backend-api.control-plane.svc.cluster.local:8080"
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secrets
+                  key: internal-api-key
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# HPA for Go Agent — scale on active call sessions
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: go-agent-hpa
+  namespace: ai-engine
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: go-agent
+  minReplicas: 2
+  maxReplicas: 50      # 50 pods × 1000 concurrent goroutines = 50,000 concurrent calls
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit-server
+  namespace: ai-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: livekit-server
+  ports:
+    - name: api
+      port: 7880
+      targetPort: 7880
+    - name: rtc-tcp
+      port: 7881
+      targetPort: 7881
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit-sip
+  namespace: ai-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: livekit-sip
+  ports:
+    - name: sip-udp
+      port: 5060
+      targetPort: 5060
+      protocol: UDP
+    - name: sip-tcp
+      port: 5060
+      targetPort: 5060
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-agent
+  namespace: ai-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: go-agent
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+# Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: livekit-secrets
+  namespace: ai-engine
+type: Opaque
+stringData:
+  api-key: "CHANGE_ME_LIVEKIT_KEY"
+  api-secret: "CHANGE_ME_LIVEKIT_SECRET_MIN_32_CHARS"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-secrets
+  namespace: ai-engine
+type: Opaque
+stringData:
+  gemini-api-key: "CHANGE_ME_GEMINI_KEY"
+  esl-password: "CHANGE_ME_ESL_PASSWORD"
+  internal-api-key: "CHANGE_ME_INTERNAL_KEY"

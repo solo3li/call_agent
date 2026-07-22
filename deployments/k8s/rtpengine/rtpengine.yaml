@@ -1,0 +1,124 @@
+---
+# rtpengine DaemonSet — Runs on EVERY node for distributed media processing
+# DaemonSet ensures RTP media stays on the same physical node
+# hostNetwork: true is REQUIRED for proper UDP media handling
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rtpengine
+  namespace: voip-edge
+  labels:
+    app: rtpengine
+    component: media-proxy
+spec:
+  selector:
+    matchLabels:
+      app: rtpengine
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: rtpengine
+        component: media-proxy
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9900"
+    spec:
+      # CRITICAL: hostNetwork for UDP RTP traffic
+      # Without this, RTP packets can't properly traverse K8s NAT
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      
+      # Only schedule on nodes with voip label
+      nodeSelector:
+        node-role: voip   # Label your VoIP nodes: kubectl label node <name> node-role=voip
+      
+      tolerations:
+        - key: "voip-dedicated"
+          operator: "Exists"
+          effect: "NoSchedule"
+      
+      containers:
+        - name: rtpengine
+          image: cpaas/rtpengine:latest
+          imagePullPolicy: Always
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN    # Required for iptables manipulation
+                - SYS_MODULE   # Required for kernel module loading
+            privileged: false
+          ports:
+            - name: ng-control
+              containerPort: 22222
+              protocol: UDP
+              hostPort: 22222   # Bind to host port for direct UDP access
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          volumeMounts:
+            - name: rtpengine-config
+              mountPath: /etc/rtpengine/rtpengine.conf
+              subPath: rtpengine.conf
+            - name: lib-modules
+              mountPath: /lib/modules
+              readOnly: true
+      volumes:
+        - name: rtpengine-config
+          configMap:
+            name: rtpengine-config
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+---
+# rtpengine Service — ClusterIP for OpenSIPS to communicate via NG protocol
+apiVersion: v1
+kind: Service
+metadata:
+  name: rtpengine-svc
+  namespace: voip-edge
+  labels:
+    app: rtpengine
+spec:
+  # Use ClusterIP since rtpengine uses hostNetwork (hostPort handles external)
+  # OpenSIPS connects via: udp:rtpengine-svc.voip-edge.svc.cluster.local:22222
+  type: ClusterIP
+  selector:
+    app: rtpengine
+  ports:
+    - name: ng-control
+      port: 22222
+      targetPort: 22222
+      protocol: UDP
+---
+# rtpengine ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rtpengine-config
+  namespace: voip-edge
+data:
+  rtpengine.conf: |
+    [rtpengine]
+    listen-ng = 0.0.0.0:22222
+    interface = DETECTED_INTERFACE
+    port-min = 20000
+    port-max = 30000
+    log-level = 6
+    log-stderr = true
+    tos = 184
+    timeout = 60
+    silent-timeout = 3600
+    dtls-passive = true

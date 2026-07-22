@@ -1,15 +1,47 @@
-port: 7880
-rtc:
-  tcp_port: 7881
-  port_range_start: 50000
-  port_range_end: 60000
-  use_external_ip: false
-keys:
-  devkey: livekit_secret_key_1234567890123
+# LiveKit SIP Gateway Configuration
+# Version: CPaaS Architecture 2.0 (FreeSWITCH upstream)
+
+# LiveKit Server connection
+livekit_url: ws://livekit-server.ai-engine.svc.cluster.local:7880
+api_key: ${LIVEKIT_API_KEY}
+api_secret: ${LIVEKIT_API_SECRET}
+
+# SIP listener configuration
+# LiveKit SIP receives calls from FreeSWITCH on this port
+sip:
+  # Port that FreeSWITCH will INVITE to
+  listen_port: 5060
+  # External IP (used in SDP)
+  # Leave empty to auto-detect
+  external_ip: ""
+
+# Redis for distributed state (when running multiple LiveKit SIP pods)
+redis:
+  address: redis.cpaas-data.svc.cluster.local:6379
+  # password: ""
+  db: 1
+
+# SIP Trunk Dispatch Rules
+# These rules determine which LiveKit room to route calls to
+# based on the SIP Request-URI (destination number / room name)
+dispatch_rules:
+  # Rule 1: Calls from FreeSWITCH (room name is the destination user)
+  # FreeSWITCH sends: INVITE sip:<room-name>@livekit-sip:5060
+  - name: freeswitch-inbound
+    # Match any call from our FreeSWITCH cluster
+    # IP range of FreeSWITCH pods in voip-core namespace
+    from:
+      - "10.0.0.0/8"   # K8s internal network
+    to:
+      # The Request-URI user part is the LiveKit room name
+      pattern: "call-.*"
+    dispatch:
+      type: individual  # One room per call
+      # Room name = the destination user in the SIP URI
+      room_prefix: ""
+      new_participant_identity: "sip-caller"
+
+# Logging
 logging:
-  json: false
   level: info
-webhook:
-  api_key: devkey
-  urls:
-    - "http://host.docker.internal:5000/api/webhook/livekit"
+  json: false

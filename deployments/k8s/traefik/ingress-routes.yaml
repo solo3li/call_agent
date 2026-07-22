@@ -1,0 +1,150 @@
+---
+# Traefik Ingress — ASP.NET Core API
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-api
+  namespace: control-plane
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`api.cpaas.io`)
+      kind: Rule
+      services:
+        - name: backend-api
+          port: 8080
+      middlewares:
+        - name: cors-headers
+        - name: rate-limit
+  tls:
+    certResolver: letsencrypt
+---
+# Traefik Ingress — React Frontend Dashboard
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-frontend
+  namespace: control-plane
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`app.cpaas.io`)
+      kind: Rule
+      services:
+        - name: frontend
+          port: 80
+  tls:
+    certResolver: letsencrypt
+---
+# Traefik Ingress — LiveKit WebSocket
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-livekit-ws
+  namespace: ai-engine
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ws.cpaas.io`)
+      kind: Rule
+      services:
+        - name: livekit-server
+          port: 7880
+      middlewares:
+        - name: websocket-headers
+  tls:
+    certResolver: letsencrypt
+---
+# Traefik Ingress — Webhook Receiver (Customer Callbacks)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-webhooks
+  namespace: control-plane
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hook.cpaas.io`)
+      kind: Rule
+      services:
+        - name: backend-api
+          port: 8080
+      middlewares:
+        - name: webhook-auth
+  tls:
+    certResolver: letsencrypt
+---
+# HTTP → HTTPS Redirect
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-http-redirect
+  namespace: control-plane
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: HostRegexp(`{host:.+}`)
+      kind: Rule
+      middlewares:
+        - name: redirect-https
+      services:
+        - name: backend-api
+          port: 8080
+---
+# Middlewares
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cors-headers
+  namespace: control-plane
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    accessControlAllowHeaders:
+      - "*"
+    accessControlAllowOriginList:
+      - "https://app.cpaas.io"
+      - "https://api.cpaas.io"
+    accessControlMaxAge: 100
+    addVaryHeader: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+  namespace: control-plane
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+    period: 1m
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: control-plane
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: websocket-headers
+  namespace: ai-engine
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"

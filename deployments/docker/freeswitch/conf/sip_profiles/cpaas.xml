@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FreeSWITCH Sofia-SIP SIP Profiles
+  
+  - external profile (port 5080): Receives calls from OpenSIPS, connects to LiveKit SIP
+  - internal profile (port 5060): Internal extensions, ESL connections
+-->
+<include>
+
+  <!-- ===============================================================
+    EXTERNAL SIP Profile — Faces OpenSIPS and LiveKit SIP
+    Port 5080 (standard for B2BUA external leg)
+  ================================================================ -->
+  <profile name="external">
+    <settings>
+      <!-- Bind to all interfaces inside the pod -->
+      <param name="sip-ip" value="0.0.0.0"/>
+      <param name="sip-port" value="5080"/>
+
+      <!-- SIP Domain — FreeSWITCH's identity for this profile -->
+      <param name="sip-domain" value="${FREESWITCH_DOMAIN}"/>
+
+      <!-- RTP settings -->
+      <param name="rtp-ip" value="0.0.0.0"/>
+      <param name="rtp-timer-name" value="soft"/>
+      <param name="rtp-timeout-sec" value="300"/>
+      <param name="rtp-hold-timeout-sec" value="1800"/>
+
+      <!-- Codec negotiation — prefer Opus for WebRTC quality, fallback to G.711 -->
+      <param name="inbound-codec-prefs" value="OPUS,G722,PCMU,PCMA"/>
+      <param name="outbound-codec-prefs" value="OPUS,G722,PCMU,PCMA"/>
+
+      <!-- NAT handling -->
+      <param name="ext-sip-ip" value="${EXT_SIP_IP}"/>
+      <param name="ext-rtp-ip" value="${EXT_SIP_IP}"/>
+      <param name="aggressive-nat-detection" value="true"/>
+      <param name="apply-nat-acl" value="nat.auto"/>
+
+      <!-- DTLS/SRTP for WebRTC interop with LiveKit SIP -->
+      <param name="enable-3pcc" value="true"/>
+      <param name="local-network-acl" value="localnet.auto"/>
+
+      <!-- Inbound authentication — trust OpenSIPS (it already authenticated) -->
+      <param name="inbound-bypass-media" value="false"/>
+      <param name="inbound-proxy-media" value="false"/>
+      <!-- Don't challenge incoming calls from OpenSIPS (it's trusted) -->
+      <param name="apply-inbound-acl" value="opensips-trusted"/>
+      <param name="auth-calls" value="false"/>
+
+      <!-- TLS settings (for encrypted SIP signaling) -->
+      <!--
+      <param name="tls" value="true"/>
+      <param name="tls-sip-port" value="5081"/>
+      <param name="tls-cert-dir" value="/etc/freeswitch/tls"/>
+      <param name="tls-version" value="tlsv1.2,tlsv1.3"/>
+      -->
+
+      <!-- Dialplan context for inbound calls -->
+      <param name="context" value="cpaas_inbound"/>
+
+      <!-- SIP OPTIONS handling (health probe from OpenSIPS) -->
+      <param name="manage-presence" value="false"/>
+      <param name="presence-hosts" value="${FREESWITCH_DOMAIN}"/>
+
+      <!-- Logging -->
+      <param name="log-auth-failures" value="true"/>
+      <param name="forward-unsolicited-mwi-notify" value="false"/>
+
+      <!-- REFER (for call transfer) -->
+      <param name="forward-unsolicited-mwi-notify" value="false"/>
+      <param name="pass-rfc2833" value="true"/>
+
+      <!-- Max calls per second (rate limiting) -->
+      <param name="max-proceeding" value="1000"/>
+    </settings>
+
+    <!-- SIP Gateways — SIP Trunk providers (BYOC support) -->
+    <!-- These are loaded dynamically from database via mod_xml_curl -->
+    <!-- Static example for testing: -->
+    <!--
+    <gateways>
+      <gateway name="test-trunk">
+        <param name="username" value="trunk_user"/>
+        <param name="password" value="trunk_pass"/>
+        <param name="proxy" value="sip.carrier.com"/>
+        <param name="register" value="true"/>
+        <param name="caller-id-in-from" value="true"/>
+      </gateway>
+    </gateways>
+    -->
+  </profile>
+
+  <!-- ===============================================================
+    INTERNAL SIP Profile — Internal extensions, ESL
+    Port 5060
+  ================================================================ -->
+  <profile name="internal">
+    <settings>
+      <param name="sip-ip" value="0.0.0.0"/>
+      <param name="sip-port" value="5060"/>
+      <param name="sip-domain" value="${FREESWITCH_DOMAIN}"/>
+      <param name="rtp-ip" value="0.0.0.0"/>
+
+      <!-- Internal profile: authenticate all registrations -->
+      <param name="auth-calls" value="true"/>
+      <param name="auth-all-packets" value="false"/>
+
+      <!-- Codec preferences for internal extensions -->
+      <param name="inbound-codec-prefs" value="OPUS,G722,PCMU,PCMA"/>
+      <param name="outbound-codec-prefs" value="OPUS,G722,PCMU,PCMA"/>
+
+      <param name="context" value="cpaas_inbound"/>
+      <param name="manage-presence" value="true"/>
+    </settings>
+  </profile>
+
+</include>

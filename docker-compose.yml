@@ -1,51 +1,320 @@
 version: '3.8'
 
-services:
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cpaas_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+##########################################################
+# CPaaS Voice AI Platform — Local Development Stack
+# New Architecture: OpenSIPS + rtpengine + FreeSWITCH + LiveKit
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f freeswitch
+#
+# VoIP Stack: opensips → rtpengine → freeswitch → livekit-sip → livekit
+# Web Stack:  traefik → backend → frontend
+##########################################################
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis_data:/data
-
-  minio:
-    image: minio/minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: password123
-    ports:
-      - "9002:9000"
-      - "9003:9001"
-    volumes:
-      - minio_data:/data
-
-  livekit-sip:
-    image: livekit/sip:latest
-    environment:
-      LIVEKIT_URL: ws://host.docker.internal:7880
-      LIVEKIT_API_KEY: devkey
-      LIVEKIT_API_SECRET: secret
-      SIP_PORT: 5060
-    ports:
-      - "5061:5060/udp"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - redis
+networks:
+  voip-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  web-net:
+    driver: bridge
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  freeswitch_logs:
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────
+  # INFRASTRUCTURE LAYER
+  # ─────────────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: cpaas-postgres
+    environment:
+      POSTGRES_USER: cpaas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cpaas_dev_pass}
+      POSTGRES_DB: cpaas_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - web-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cpaas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cpaas-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - voip-net
+      - web-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  minio:
+    image: minio/minio
+    container_name: cpaas-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minio_dev_password}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - web-net
+
+  # ─────────────────────────────────────────────────────────────────────
+  # VOIP EDGE LAYER: OpenSIPS + rtpengine
+  # ─────────────────────────────────────────────────────────────────────
+
+  rtpengine:
+    image: drachtio/rtpengine:latest
+    container_name: cpaas-rtpengine
+    # hostNetwork equivalent for local dev: expose all needed ports
+    network_mode: host    # Required for proper RTP media handling
+    command: >
+      rtpengine
+      --interface=lo
+      --listen-ng=127.0.0.1:22222
+      --port-min=20000
+      --port-max=20500
+      --log-level=5
+      --log-stderr=true
+      --foreground=true
+    cap_add:
+      - NET_ADMIN
+
+  opensips:
+    image: opensips/opensips:3.5
+    container_name: cpaas-opensips
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "8888:8888/tcp"    # Management interface
+    environment:
+      OPENSIPS_DB_HOST: postgres
+      OPENSIPS_DB_PASS: ${POSTGRES_PASSWORD:-cpaas_dev_pass}
+    volumes:
+      - ./deployments/docker/opensips/opensips.cfg:/etc/opensips/opensips.cfg:ro
+      - ./deployments/docker/opensips/dispatcher.list:/etc/opensips/dispatcher.list:ro
+    networks:
+      - voip-net
+    depends_on:
+      - rtpengine
+      - freeswitch
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────
+  # VOIP CORE LAYER: FreeSWITCH
+  # ─────────────────────────────────────────────────────────────────────
+
+  freeswitch:
+    build:
+      context: ./deployments/docker/freeswitch
+      dockerfile: Dockerfile
+    container_name: cpaas-freeswitch
+    ports:
+      - "5080:5080/udp"   # External SIP profile (receives from OpenSIPS)
+      - "5080:5080/tcp"
+      - "5090:5060/udp"   # Internal SIP profile
+      - "8021:8021/tcp"   # ESL
+      - "16384-16484:16384-16484/udp"  # RTP media (small range for dev)
+    environment:
+      BACKEND_API_URL: http://backend:8080
+      ESL_PASSWORD: ${ESL_PASSWORD:-esl_dev_password}
+      FREESWITCH_DOMAIN: freeswitch.local
+      SIP_TRUNK_HOST: ${SIP_TRUNK_HOST:-sip.trunk.example.com}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
+      EXT_SIP_IP: ${EXT_SIP_IP:-127.0.0.1}
+    volumes:
+      - freeswitch_logs:/var/log/freeswitch
+    networks:
+      - voip-net
+      - web-net
+    depends_on:
+      - redis
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "fs_cli", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────────────────────────────
+  # AI ENGINE LAYER: LiveKit Server + LiveKit SIP + Go Agent
+  # ─────────────────────────────────────────────────────────────────────
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: cpaas-livekit
+    command: --config /etc/livekit/livekit.yaml
+    ports:
+      - "7880:7880/tcp"   # WebSocket API
+      - "7881:7881/tcp"   # WebRTC TCP
+      - "50000-50020:50000-50020/udp"  # WebRTC UDP media
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+    networks:
+      - voip-net
+      - web-net
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:7880/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  livekit-sip:
+    image: livekit/sip:latest
+    container_name: cpaas-livekit-sip
+    ports:
+      - "5062:5060/udp"   # SIP from FreeSWITCH
+      - "5062:5060/tcp"
+      - "20000-20100/udp"  # RTP for LiveKit SIP
+    environment:
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
+      SIP_PORT: 5060
+    networks:
+      - voip-net
+    depends_on:
+      - livekit
+    restart: unless-stopped
+
+  go-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: cpaas-go-agent
+    ports:
+      - "8082:8080"
+    environment:
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
+      AI_API_KEY: ${GEMINI_API_KEY}
+      FREESWITCH_ESL_HOST: freeswitch:8021
+      FREESWITCH_ESL_PASS: ${ESL_PASSWORD:-esl_dev_password}
+      BACKEND_API_URL: http://backend:8080
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
+      PORT: 8080
+    networks:
+      - voip-net
+      - web-net
+    depends_on:
+      - livekit
+      - freeswitch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ─────────────────────────────────────────────────────────────────────
+  # CONTROL PLANE: ASP.NET Backend + React Frontend
+  # ─────────────────────────────────────────────────────────────────────
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cpaas-backend
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=cpaas_db;Username=cpaas;Password=${POSTGRES_PASSWORD:-cpaas_dev_pass}"
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
+      GO_AGENT_URL: http://go-agent:8080
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
+      FreeSWITCH__Host: freeswitch
+      FreeSWITCH__Port: 8021
+      FreeSWITCH__Password: ${ESL_PASSWORD:-esl_dev_password}
+      Jwt__Key: ${JWT_SECRET:-super_secret_jwt_key_for_dev_only_32chars}
+      Jwt__Issuer: cpaas-auth
+      Jwt__Audience: cpaas-frontend
+    networks:
+      - web-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/api/internal/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cpaas-frontend
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_URL: http://localhost:8080
+      REACT_APP_LIVEKIT_URL: ws://localhost:7880
+    networks:
+      - web-net
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────
+  # OBSERVABILITY: Prometheus + Grafana (optional but recommended)
+  # ─────────────────────────────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cpaas-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deployments/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - web-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cpaas-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    networks:
+      - web-net
+    depends_on:
+      - prometheus
+    restart: unless-stopped

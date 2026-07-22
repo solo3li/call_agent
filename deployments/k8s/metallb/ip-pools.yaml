@@ -1,0 +1,50 @@
+---
+# MetalLB IP Address Pool — VoIP Layer (UDP-heavy traffic: SIP + RTP)
+# Change IP ranges to match your actual server network
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: voip-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.1.200-192.168.1.210   # Adjust to your network range
+  avoidBuggyIPs: true
+  autoAssign: true
+---
+# MetalLB IP Address Pool — Web Layer (TCP: HTTP/HTTPS/WebSockets)
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: web-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.1.220-192.168.1.230   # Adjust to your network range
+  avoidBuggyIPs: true
+  autoAssign: true
+---
+# Layer 2 Advertisement for VoIP Pool
+# For BGP environments, replace with BGPAdvertisement
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: voip-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - voip-pool
+  # Restrict to specific nodes (optional, for dedicated VoIP nodes)
+  # nodeSelectors:
+  #   - matchLabels:
+  #       node-role: voip
+---
+# Layer 2 Advertisement for Web Pool
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: web-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - web-pool

@@ -1,0 +1,17 @@
+# OpenSIPS Dispatcher List — FreeSWITCH Cluster
+# Format: setid destination [flags [priority [attrs]]]
+# Flags: 0=active, 2=disabled, 8=auto-probing
+# 
+# Group 1: FreeSWITCH Nodes (Auto-discovered from Kubernetes headless service)
+# In K8s, these IPs are resolved from the StatefulSet headless service.
+# Update these IPs to match your FreeSWITCH pod IPs or use DNS.
+#
+# setid  destination                        flags  priority  attrs
+1        sip:freeswitch-0.freeswitch-hs.voip-core.svc.cluster.local:5080  0  10  node=fs-0
+1        sip:freeswitch-1.freeswitch-hs.voip-core.svc.cluster.local:5080  0  10  node=fs-1
+1        sip:freeswitch-2.freeswitch-hs.voip-core.svc.cluster.local:5080  0  10  node=fs-2
+
+# Group 2: Human Agent SIP endpoints (MicroSIP / Softphone destinations)
+# These are registered dynamically via SIP REGISTER
+# Add static human agent URIs here if needed
+# 2  sip:agent1@10.0.0.5:5060  0  10  agent=human-1
