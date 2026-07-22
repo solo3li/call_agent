@@ -1,0 +1,187 @@
+---
+# OpenSIPS Deployment — SIP Edge Proxy + Load Balancer
+# Runs as multiple replicas for high availability
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensips
+  namespace: voip-edge
+  labels:
+    app: opensips
+    component: sip-proxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: opensips
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: opensips
+        component: sip-proxy
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8888"
+    spec:
+      # Give OpenSIPS ability to bind to host network ports
+      # Required for SIP to receive proper source IPs
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
+      containers:
+        - name: opensips
+          image: cpaas/opensips:3.5
+          imagePullPolicy: Always
+          ports:
+            - name: sip-udp
+              containerPort: 5060
+              protocol: UDP
+            - name: sip-tcp
+              containerPort: 5060
+              protocol: TCP
+            - name: mi-http
+              containerPort: 8888
+              protocol: TCP
+            - name: hep-udp
+              containerPort: 9060
+              protocol: UDP
+          env:
+            - name: OPENSIPS_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: opensips-secrets
+                  key: db-host
+            - name: OPENSIPS_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: opensips-secrets
+                  key: db-password
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /mi/which
+              port: 8888
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /mi/which
+              port: 8888
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: opensips-config
+              mountPath: /etc/opensips/opensips.cfg
+              subPath: opensips.cfg
+            - name: opensips-config
+              mountPath: /etc/opensips/dispatcher.list
+              subPath: dispatcher.list
+      volumes:
+        - name: opensips-config
+          configMap:
+            name: opensips-config
+---
+# OpenSIPS Service — Exposed via MetalLB for SIP traffic
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensips-sip
+  namespace: voip-edge
+  labels:
+    app: opensips
+  annotations:
+    metallb.universe.tf/address-pool: voip-pool
+    # Custom IP for SIP entry point
+    metallb.universe.tf/loadBalancerIPs: "192.168.1.200"
+spec:
+  type: LoadBalancer
+  selector:
+    app: opensips
+  ports:
+    - name: sip-udp
+      port: 5060
+      targetPort: 5060
+      protocol: UDP
+    - name: sip-tcp
+      port: 5060
+      targetPort: 5060
+      protocol: TCP
+    - name: hep
+      port: 9060
+      targetPort: 9060
+      protocol: UDP
+  externalTrafficPolicy: Local  # Preserve source IP for anti-flood
+---
+# OpenSIPS Management Service (internal only — not exposed to internet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensips-mi
+  namespace: voip-edge
+  labels:
+    app: opensips
+spec:
+  type: ClusterIP
+  selector:
+    app: opensips
+  ports:
+    - name: mi-http
+      port: 8888
+      targetPort: 8888
+      protocol: TCP
+---
+# OpenSIPS ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensips-config
+  namespace: voip-edge
+data:
+  opensips.cfg: |
+    # Injected from deployments/docker/opensips/opensips.cfg
+    # Use kustomize or helm to inject the actual file content
+  dispatcher.list: |
+    1  sip:freeswitch-0.freeswitch-hs.voip-core.svc.cluster.local:5080  0  10  node=fs-0
+    1  sip:freeswitch-1.freeswitch-hs.voip-core.svc.cluster.local:5080  0  10  node=fs-1
+---
+# OpenSIPS Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opensips-secrets
+  namespace: voip-edge
+type: Opaque
+stringData:
+  db-host: "postgres.cpaas-data.svc.cluster.local"
+  db-password: "CHANGE_ME_STRONG_PASSWORD"
+---
+# HorizontalPodAutoscaler for OpenSIPS
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: opensips-hpa
+  namespace: voip-edge
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: opensips
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

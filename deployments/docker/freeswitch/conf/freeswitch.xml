@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FreeSWITCH Main Configuration for CPaaS Voice AI Platform
+  
+  Architecture Role:
+  - Receives SIP calls from OpenSIPS (via external SIP profile on 5080)
+  - Queries ASP.NET API for tenant/agent configuration
+  - Creates LiveKit room and dispatches Go AI Agent
+  - Bridges call to LiveKit SIP gateway
+  - Handles human transfer via ESL → OpenSIPS → MicroSIP
+  - Generates JSON CDR for billing
+-->
+<document type="freeswitch/xml">
+
+  <!-- =================== SECTION: Configuration =================== -->
+  <section name="configuration" description="FreeSWITCH Core Modules">
+
+    <!-- Core Settings -->
+    <configuration name="switch.conf" description="Core Configuration">
+      <settings>
+        <!-- Max simultaneous sessions (calls) per FreeSWITCH node -->
+        <param name="max-sessions" value="2000"/>
+        <!-- Sessions per second rate limiting -->
+        <param name="sessions-per-second" value="100"/>
+        <!-- Default language for TTS/say -->
+        <param name="default-language" value="ar"/>
+        <!-- Log level: 0=CONSOLE 1=ALERT 2=CRIT 3=ERR 4=WARN 5=NOTICE 6=INFO 7=DEBUG -->
+        <param name="loglevel" value="info"/>
+        <!-- RTP timer mode -->
+        <param name="rtp-start-port" value="16384"/>
+        <param name="rtp-end-port" value="32768"/>
+        <!-- Caller-ID handling -->
+        <param name="callerid-type" value="rpid"/>
+      </settings>
+    </configuration>
+
+    <!-- Module Loader -->
+    <configuration name="modules.conf" description="Modules">
+      <modules>
+        <!-- Transport -->
+        <load module="mod_sofia"/>
+        <!-- Dialplan -->
+        <load module="mod_dialplan_xml"/>
+        <!-- Applications -->
+        <load module="mod_commands"/>
+        <load module="mod_dptools"/>
+        <load module="mod_curl"/>
+        <!-- Audio Codecs -->
+        <load module="mod_opus"/>
+        <load module="mod_g711"/>
+        <load module="mod_g722"/>
+        <!-- Audio Files -->
+        <load module="mod_sndfile"/>
+        <load module="mod_native_file"/>
+        <!-- Tones -->
+        <load module="mod_tone_stream"/>
+        <!-- Event Socket Layer (ESL) — critical for programmatic control -->
+        <load module="mod_event_socket"/>
+        <!-- CDR -->
+        <load module="mod_json_cdr"/>
+        <!-- Scripting -->
+        <load module="mod_lua"/>
+        <!-- XML Config from HTTP (for dynamic config) -->
+        <load module="mod_xml_curl"/>
+        <!-- Say (multilingual) -->
+        <load module="mod_say_en"/>
+        <load module="mod_say_ar"/>
+      </modules>
+    </configuration>
+
+    <!-- Event Socket Layer (ESL) — allows Go Agent and ASP.NET to control calls -->
+    <configuration name="event_socket.conf" description="ESL Config">
+      <settings>
+        <param name="nat-map" value="false"/>
+        <param name="listen-ip" value="0.0.0.0"/>
+        <param name="listen-port" value="8021"/>
+        <!-- ESL password — should match Go Agent and ASP.NET configs -->
+        <param name="password" value="${ESL_PASSWORD}"/>
+        <!-- Allow connections from within the cluster only -->
+        <param name="apply-inbound-acl" value="cluster-internal"/>
+      </settings>
+    </configuration>
+
+    <!-- JSON CDR — sends call records to our ASP.NET API for billing -->
+    <configuration name="json_cdr.conf" description="JSON CDR">
+      <settings>
+        <param name="url" value="${BACKEND_API_URL}/api/internal/cdr"/>
+        <param name="err-log-dir" value="/var/log/freeswitch/cdr-errors"/>
+        <param name="log-dir" value="/var/log/freeswitch/cdr"/>
+        <param name="encode" value="false"/>
+        <param name="log-http-and-disk" value="false"/>
+        <param name="prefix-a-leg" value="true"/>
+        <!-- Retry on failure -->
+        <param name="retries" value="3"/>
+        <param name="delay" value="5"/>
+        <!-- Auth header for our API -->
+        <param name="auth-scheme" value="basic"/>
+        <param name="cred" value="freeswitch:${ESL_PASSWORD}"/>
+      </settings>
+    </configuration>
+
+    <!-- mod_curl settings for API calls within dialplan -->
+    <configuration name="curl.conf" description="CURL Config">
+      <settings>
+        <param name="connect-timeout" value="5"/>
+        <param name="timeout" value="10"/>
+      </settings>
+    </configuration>
+
+    <!-- ACL — Restrict ESL to internal cluster only -->
+    <configuration name="acl.conf" description="ACL">
+      <network-lists>
+        <list name="cluster-internal" default="deny">
+          <node type="allow" cidr="10.0.0.0/8"/>
+          <node type="allow" cidr="172.16.0.0/12"/>
+          <node type="allow" cidr="192.168.0.0/16"/>
+          <node type="allow" cidr="127.0.0.1/32"/>
+        </list>
+        <list name="opensips-trusted" default="deny">
+          <!-- OpenSIPS pods in voip-edge namespace -->
+          <node type="allow" cidr="10.0.0.0/8"/>
+        </list>
+      </network-lists>
+    </configuration>
+
+  </section>
+
+  <!-- =================== SECTION: Dialplan =================== -->
+  <section name="dialplan" description="CPaaS Dialplan">
+    <context name="cpaas_inbound">
+
+      <!--
+        MAIN INBOUND CALL HANDLER
+        Every call arriving from OpenSIPS lands here.
+        
+        Flow:
+        1. Extract destination number from SIP INVITE R-URI
+        2. Query ASP.NET API: GET /api/internal/phone-config/{number}
+        3. If tenant found: start AI agent session → bridge to LiveKit SIP
+        4. If not found: play "number not in service" and hangup
+      -->
+      <extension name="ai_inbound_handler" continue="false">
+        <condition field="destination_number" expression="^(\+?[\d]{7,15})$">
+
+          <!-- Set call metadata -->
+          <action application="set" data="continue_on_fail=true"/>
+          <action application="set" data="call_uuid=${uuid}"/>
+          <action application="set" data="dest_number=$1"/>
+          <action application="set" data="caller_number=${caller_id_number}"/>
+
+          <!-- Play ringback tone while we set up the AI session -->
+          <action application="set" data="ringback=${us-ring}"/>
+
+          <!-- ========== STEP 1: Lookup Tenant Config from ASP.NET API ========== -->
+          <!-- GET /api/internal/phone-config/{number} -->
+          <!-- Returns JSON: {"tenantId":"...","agentId":"...","prompt":"...","provider":"gemini"} -->
+          <action application="curl" data="${BACKEND_API_URL}/api/internal/phone-config/$1 GET api_result"/>
+
+          <!-- Parse JSON response into channel variables -->
+          <action application="lua" data="parse_api_response.lua"/>
+
+          <!-- If no tenant found for this number, reject gracefully -->
+          <condition field="${api_status}" expression="^error$" break="on-true">
+            <action application="answer"/>
+            <action application="playback" data="silence_stream://500"/>
+            <action application="say" data="en number pronounced ${dest_number}"/>
+            <action application="hangup" data="NO_ROUTE_DESTINATION"/>
+          </condition>
+
+          <!-- ========== STEP 2: Answer and prepare ========== -->
+          <action application="answer"/>
+
+          <!-- Generate unique LiveKit room name for this call -->
+          <action application="set" data="livekit_room=call-${uuid}"/>
+
+          <!-- ========== STEP 3: Trigger Go AI Agent via ASP.NET ========== -->
+          <!-- POST /api/internal/agent-join with room and tenant config -->
+          <action application="curl" data="${BACKEND_API_URL}/api/internal/agent-join POST {&quot;roomName&quot;:&quot;${livekit_room}&quot;,&quot;agentId&quot;:&quot;${api_agent_id}&quot;,&quot;callerNumber&quot;:&quot;${caller_number}&quot;,&quot;freeswitchUUID&quot;:&quot;${uuid}&quot;} agent_join_result"/>
+
+          <!-- Small delay to allow Go Agent to connect to LiveKit room -->
+          <action application="sleep" data="500"/>
+
+          <!-- ========== STEP 4: Bridge call to LiveKit SIP ========== -->
+          <!-- LiveKit SIP listens on port 5060 and handles the SIP→WebRTC bridge -->
+          <action application="export" data="sip_h_X-LiveKit-Room=${livekit_room}"/>
+          <action application="export" data="sip_h_X-Tenant-Id=${api_tenant_id}"/>
+          <action application="export" data="sip_h_X-Caller-Number=${caller_number}"/>
+
+          <action application="bridge" data="sofia/external/${livekit_room}@livekit-sip.ai-engine.svc.cluster.local:5060"/>
+
+          <!-- Post-call: Log hangup cause for CDR -->
+          <action application="set" data="hangup_after_bridge=true"/>
+        </condition>
+      </extension>
+
+      <!--
+        HUMAN TRANSFER HANDLER
+        Called by Go Agent via ESL when it detects the user needs human assistance.
+        
+        Flow: ESL transfer command → this extension → bridge to human SIP URI
+      -->
+      <extension name="human_transfer" continue="false">
+        <condition field="destination_number" expression="^transfer-human-(.+)$">
+          <action application="set" data="transfer_target=$1"/>
+          <action application="set" data="effective_caller_id_number=${caller_id_number}"/>
+
+          <!-- Notify backend: human transfer initiated -->
+          <action application="curl" data="${BACKEND_API_URL}/api/internal/transfer POST {&quot;uuid&quot;:&quot;${uuid}&quot;,&quot;targetSipUri&quot;:&quot;${transfer_target}&quot;,&quot;reason&quot;:&quot;human_request&quot;}"/>
+
+          <!-- Play hold music while we connect the human agent -->
+          <action application="playback" data="tone_stream://%(400,200,400,450);loops=3"/>
+
+          <!-- Bridge to human SIP URI (e.g., sip:agent@microsip-domain) -->
+          <action application="bridge" data="sofia/external/${transfer_target}"/>
+        </condition>
+      </extension>
+
+      <!--
+        OUTBOUND CALL HANDLER
+        Used for proactive/campaign outbound calls triggered via API.
+      -->
+      <extension name="outbound_ai" continue="false">
+        <condition field="destination_number" expression="^outbound-(\+?[\d]{7,15})-(.+)$">
+          <action application="set" data="dest_number=$1"/>
+          <action application="set" data="livekit_room=$2"/>
+          <action application="bridge" data="sofia/external/$1@${SIP_TRUNK_HOST}"/>
+        </condition>
+      </extension>
+
+      <!-- Catch-all: reject unknown destinations -->
+      <extension name="catch-all">
+        <condition field="destination_number" expression=".*">
+          <action application="hangup" data="UNALLOCATED_NUMBER"/>
+        </condition>
+      </extension>
+
+    </context>
+  </section>
+
+  <!-- =================== SECTION: Directory =================== -->
+  <section name="directory" description="SIP User Directory">
+    <!-- FreeSWITCH internal domain (used for ESL and internal registrations) -->
+    <domain name="${FREESWITCH_DOMAIN}">
+      <params>
+        <param name="dial-string" value="{presence_id=${dialed_user}@${dialed_domain}}${sofia_contact(${dialed_user}@${dialed_domain})}"/>
+      </params>
+    </domain>
+  </section>
+
+</document>

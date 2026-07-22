@@ -1,0 +1,64 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: 'cpaas'
+    environment: 'production'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+
+  # ── Go AI Agent ──────────────────────────────────────────────────────
+  - job_name: 'go-agent'
+    static_configs:
+      - targets: ['go-agent:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # ── ASP.NET Backend ──────────────────────────────────────────────────
+  - job_name: 'backend-api'
+    static_configs:
+      - targets: ['backend:8080']
+    metrics_path: '/metrics'
+
+  # ── LiveKit Server ───────────────────────────────────────────────────
+  - job_name: 'livekit'
+    static_configs:
+      - targets: ['livekit:6789']  # LiveKit metrics port
+    metrics_path: '/metrics'
+
+  # ── OpenSIPS ─────────────────────────────────────────────────────────
+  - job_name: 'opensips'
+    static_configs:
+      - targets: ['opensips:8888']
+    metrics_path: '/mi/get_statistics'
+    scrape_interval: 30s
+
+  # ── FreeSWITCH (via ESL exporter) ────────────────────────────────────
+  # Deploy freeswitch-exporter alongside FreeSWITCH for Prometheus metrics
+  - job_name: 'freeswitch'
+    static_configs:
+      - targets: ['freeswitch:9282']  # freeswitch-exporter
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # ── Redis ────────────────────────────────────────────────────────────
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # ── Node/Container metrics ───────────────────────────────────────────
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']

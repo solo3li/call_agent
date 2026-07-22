@@ -27,8 +27,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure Asterisk Services
-builder.Services.Configure<backend.Models.AsteriskSettings>(builder.Configuration.GetSection("Asterisk"));
+// Configure FreeSWITCH ESL Settings (replaces Asterisk)
+builder.Services.Configure<backend.Models.FreeSwitchSettings>(builder.Configuration.GetSection("FreeSWITCH"));
 
 // Removed Google and Alibaba AI Services as they are now handled by the Golang Agent
 

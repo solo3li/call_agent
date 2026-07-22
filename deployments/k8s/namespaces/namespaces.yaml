@@ -1,0 +1,59 @@
+---
+# CPaaS Platform — Kubernetes Namespaces
+# Each namespace isolates a layer for independent scaling and RBAC
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voip-edge
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: telecom-edge
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voip-core
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: telecom-core
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-engine
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: ai
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: control-plane
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: control
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cpaas-data
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: data
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: observability
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metallb-system
+  labels:
+    app.kubernetes.io/part-of: cpaas
+    layer: network

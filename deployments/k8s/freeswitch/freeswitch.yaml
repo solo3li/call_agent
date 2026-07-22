@@ -1,0 +1,178 @@
+---
+# FreeSWITCH StatefulSet — B2BUA Media Processing
+# StatefulSet gives stable network identities (freeswitch-0, freeswitch-1...)
+# Required because OpenSIPS Dispatcher needs predictable hostnames
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: freeswitch
+  namespace: voip-core
+  labels:
+    app: freeswitch
+    component: b2bua
+spec:
+  serviceName: freeswitch-hs    # Headless service name
+  replicas: 2                   # 2 nodes for HA; scale up for more concurrent calls
+  selector:
+    matchLabels:
+      app: freeswitch
+  podManagementPolicy: Parallel  # Start all pods simultaneously
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: freeswitch
+        component: b2bua
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      # Graceful termination: allow current calls to finish (max 5 min)
+      terminationGracePeriodSeconds: 300
+      
+      containers:
+        - name: freeswitch
+          image: cpaas/freeswitch:1.10
+          imagePullPolicy: Always
+          ports:
+            - name: sip-external
+              containerPort: 5080
+              protocol: UDP
+            - name: sip-external-tcp
+              containerPort: 5080
+              protocol: TCP
+            - name: sip-internal
+              containerPort: 5060
+              protocol: UDP
+            - name: esl
+              containerPort: 8021
+              protocol: TCP
+          env:
+            - name: BACKEND_API_URL
+              value: "http://backend-api.control-plane.svc.cluster.local:8080"
+            - name: ESL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: freeswitch-secrets
+                  key: esl-password
+            - name: FREESWITCH_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: freeswitch-secrets
+                  key: domain
+            - name: SIP_TRUNK_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: freeswitch-secrets
+                  key: sip-trunk-host
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "4000m"
+              memory: "4Gi"
+          livenessProbe:
+            exec:
+              command:
+                - fs_cli
+                - -x
+                - "status"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 5080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: freeswitch-config
+              mountPath: /etc/freeswitch
+            - name: freeswitch-recordings
+              mountPath: /var/lib/freeswitch/recordings
+            - name: freeswitch-logs
+              mountPath: /var/log/freeswitch
+      volumes:
+        - name: freeswitch-config
+          configMap:
+            name: freeswitch-config
+        - name: freeswitch-recordings
+          emptyDir: {}
+  
+  # Persistent storage for recordings (optional — attach MinIO instead)
+  volumeClaimTemplates:
+    - metadata:
+        name: freeswitch-logs
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+---
+# Headless Service — for stable DNS names in StatefulSet
+# freeswitch-0.freeswitch-hs.voip-core.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: freeswitch-hs
+  namespace: voip-core
+  labels:
+    app: freeswitch
+spec:
+  clusterIP: None   # Headless = no single ClusterIP, each pod gets DNS record
+  selector:
+    app: freeswitch
+  ports:
+    - name: sip-external
+      port: 5080
+      protocol: UDP
+    - name: esl
+      port: 8021
+      protocol: TCP
+---
+# ClusterIP Service — for LiveKit SIP to reach FreeSWITCH
+apiVersion: v1
+kind: Service
+metadata:
+  name: freeswitch-svc
+  namespace: voip-core
+  labels:
+    app: freeswitch
+spec:
+  type: ClusterIP
+  selector:
+    app: freeswitch
+  ports:
+    - name: sip-external
+      port: 5080
+      targetPort: 5080
+      protocol: UDP
+    - name: esl
+      port: 8021
+      targetPort: 8021
+      protocol: TCP
+---
+# FreeSWITCH Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: freeswitch-secrets
+  namespace: voip-core
+type: Opaque
+stringData:
+  esl-password: "CHANGE_ME_STRONG_ESL_PASSWORD"
+  domain: "freeswitch.cpaas.local"
+  sip-trunk-host: "sip.your-carrier.com"
+---
+# FreeSWITCH ConfigMap (config files injected here)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: freeswitch-config
+  namespace: voip-core
+data:
+  # Main config files are embedded here via helm or kustomize
+  # Use: kubectl create configmap freeswitch-config --from-file=conf/ -n voip-core
+  README: "Config files are managed via helm. See deployments/docker/freeswitch/conf/"
