@@ -15,7 +15,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -o cpaas-agent .
 FROM alpine:3.19
 
 # Opus runtime library
-RUN apk add --no-cache opus ca-certificates wget
+RUN apk add --no-cache opus opusfile ca-certificates wget
 
 WORKDIR /app
 COPY --from=builder /app/cpaas-agent .

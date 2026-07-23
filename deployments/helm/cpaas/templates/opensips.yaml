@@ -46,7 +46,7 @@ spec:
               protocol: UDP
           env:
             - name: OPENSIPS_DB_HOST
-              value: "postgresql.{{ .Release.Namespace }}.svc.cluster.local"
+              value: "{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}.svc.cluster.local"
             - name: OPENSIPS_DB_PASS
               valueFrom:
                 secretKeyRef:

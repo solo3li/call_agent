@@ -182,7 +182,7 @@ goAgent:
   replicaCount: 2
   image:
     repository: cpaas/go-agent
-    tag: "2.0.0"
+    tag: "latest"
   port: 8080
   aiProvider: "gemini"
   geminiApiKey: "CHANGE_ME_GEMINI_KEY"
@@ -206,7 +206,7 @@ backend:
   replicaCount: 2
   image:
     repository: cpaas/backend
-    tag: "2.0.0"
+    tag: "latest"
   port: 8080
   jwt:
     key: "CHANGE_ME_JWT_KEY_32_CHARS_MINIMUM"
@@ -233,7 +233,7 @@ frontend:
   replicaCount: 2
   image:
     repository: cpaas/frontend
-    tag: "2.0.0"
+    tag: "latest"
   port: 80
   ingress:
     host: "app.cpaas.example.com"
@@ -279,11 +279,15 @@ redis:
 # ── MinIO (Bitnami) ──────────────────────────────────────────────
 minio:
   enabled: true
-  auth:
-    rootUser: "admin"
-    rootPassword: "CHANGE_ME_MINIO_PASS"
-  defaultBuckets: "recordings,knowledge-base"
+  rootUser: "admin"
+  rootPassword: "CHANGE_ME_MINIO_PASS"
+  buckets:
+    - name: recordings
+      policy: public
+    - name: knowledge-base
+      policy: public
   persistence:
+    enabled: true
     size: "50Gi"
 
 # ── Monitoring ───────────────────────────────────────────────────
