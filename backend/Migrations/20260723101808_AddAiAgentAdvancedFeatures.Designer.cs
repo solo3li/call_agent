@@ -12,8 +12,8 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260723093909_AddContactsAndUserSettings")]
-    partial class AddContactsAndUserSettings
+    [Migration("20260723101808_AddAiAgentAdvancedFeatures")]
+    partial class AddAiAgentAdvancedFeatures
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,22 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Dialect")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Emotion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FallbackNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("ModelName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -47,6 +63,10 @@ namespace backend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SpeakingStyle")
                         .IsRequired()
                         .HasColumnType("text");
 
