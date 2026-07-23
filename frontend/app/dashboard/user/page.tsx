@@ -1,13 +1,34 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Grid, Column, Tile, DataTable, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, TableContainer } from '@carbon/react';
+import { apiFetch } from '@/lib/api';
 
 export default function UserOverview() {
-  const rows = [
-    { id: '1', from: '+1 555-0192', to: 'Me', duration: '02:15', status: 'Completed', time: 'Today, 10:30 AM' },
-    { id: '2', from: 'Me', to: '+44 20 7946 0958', duration: '05:42', status: 'Completed', time: 'Yesterday, 3:15 PM' },
-    { id: '3', from: '+1 555-8832', to: 'Me', duration: '00:00', status: 'Missed', time: 'Yesterday, 1:00 PM' },
-  ];
+  const [calls, setCalls] = useState<any[]>([]);
+
+  const fetchCalls = async () => {
+    try {
+      const res = await apiFetch('/api/calls');
+      if (res.ok) {
+        const data = await res.json();
+        setCalls(data.map((c: any) => ({
+          id: c.id,
+          from: c.direction === 'inbound' ? c.callerNumber : 'Me',
+          to: c.direction === 'outbound' ? c.calledNumber : 'Me',
+          duration: `${Math.floor(c.durationSeconds / 60).toString().padStart(2, '0')}:${(c.durationSeconds % 60).toString().padStart(2, '0')}`,
+          status: c.status,
+          time: new Date(c.startTime).toLocaleString()
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching calls', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCalls();
+  }, []);
   
   const headers = [
     { key: 'from', header: 'From' },
@@ -16,6 +37,8 @@ export default function UserOverview() {
     { key: 'status', header: 'Status' },
     { key: 'time', header: 'Time' },
   ];
+
+  const missedCount = calls.filter(c => c.status?.toLowerCase() === 'missed').length;
 
   return (
     <Grid>
@@ -29,7 +52,7 @@ export default function UserOverview() {
       <Column lg={5} md={4} sm={4}>
         <Tile>
           <h3 style={{ marginBottom: '1rem' }}>Missed Calls</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: 600, color: '#fa4d56' }}>1</p>
+          <p style={{ fontSize: '2.5rem', fontWeight: 600, color: '#fa4d56' }}>{missedCount}</p>
         </Tile>
       </Column>
       
@@ -48,7 +71,7 @@ export default function UserOverview() {
       </Column>
 
       <Column lg={16} md={8} sm={4} style={{ marginTop: '2rem' }}>
-        <DataTable rows={rows} headers={headers}>
+        <DataTable rows={calls} headers={headers}>
           {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
             <TableContainer title="Recent Calls">
               <Table {...getTableProps()}>
