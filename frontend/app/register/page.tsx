@@ -42,6 +42,7 @@ export default function Register() {
         
         if (loginRes.ok && loginData.token) {
           localStorage.setItem('token', loginData.token);
+          document.cookie = `token=${loginData.token}; path=/; max-age=604800; samesite=strict`;
           if (accountType === 'developer') {
             router.push('/dashboard/developer');
           } else {

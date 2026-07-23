@@ -26,6 +26,7 @@ export default function Login() {
       
       if (res.ok && data.token) {
         localStorage.setItem('token', data.token);
+        document.cookie = `token=${data.token}; path=/; max-age=604800; samesite=strict`;
         
         // Very basic JWT decode to determine role if we had a role claim.
         // For now, redirect based on developer/user intent or default to developer
