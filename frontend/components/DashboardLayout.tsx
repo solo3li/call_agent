@@ -40,15 +40,20 @@ export default function DashboardLayout({
 
   const userLinks = [
     { name: 'Overview', href: '/dashboard/user' },
+    { name: 'AI Agents', href: '/dashboard/user/ai-agents' },
+    { name: 'Live Calls', href: '/dashboard/user/live-calls' },
     { name: 'Web Phone', href: '/dashboard/user/web-phone' },
     { name: 'Contacts', href: '/dashboard/user/contacts' },
     { name: 'Settings', href: '/dashboard/user/settings' },
   ];
 
   const links = userType === 'developer' ? devLinks : userLinks;
+  const currentTheme = userType === 'developer' ? 'g100' : 'white';
+  const bgColor = userType === 'developer' ? '#161616' : '#f4f4f4';
+  const textColor = userType === 'developer' ? '#f4f4f4' : '#161616';
 
   return (
-    <Theme theme="g100">
+    <Theme theme={currentTheme}>
       <HeaderContainer
         render={({ isSideNavExpanded: _is, onClickSideNavExpand }: any) => (
           <>
@@ -90,7 +95,7 @@ export default function DashboardLayout({
           </>
         )}
       />
-      <div style={{ paddingTop: '4rem', paddingLeft: '16rem', minHeight: '100vh', backgroundColor: '#161616', color: '#f4f4f4' }}>
+      <div style={{ paddingTop: '4rem', paddingLeft: '16rem', minHeight: '100vh', backgroundColor: bgColor, color: textColor, transition: 'background-color 0.3s ease' }}>
         <div style={{ padding: '2rem' }}>
           {children}
         </div>

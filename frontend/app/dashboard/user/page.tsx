@@ -35,6 +35,7 @@ export default function UserOverview() {
     { key: 'to', header: 'To' },
     { key: 'duration', header: 'Duration' },
     { key: 'status', header: 'Status' },
+    { key: 'aiSummary', header: 'AI Summary' },
     { key: 'time', header: 'Time' },
   ];
 
@@ -43,66 +44,72 @@ export default function UserOverview() {
   return (
     <Grid>
       <Column lg={16} md={8} sm={4}>
-        <h1 className="impeccable-title">My Dashboard</h1>
-        <p style={{ marginBottom: '2rem', color: '#c6c6c6', fontSize: '1.2rem' }}>
-          Welcome back. Here is your personal call activity and status.
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 300, marginBottom: '0.5rem', color: '#161616' }}>My Dashboard</h1>
+        <p style={{ marginBottom: '2rem', color: '#525252', fontSize: '1.2rem' }}>
+          Welcome back. Here is your personal call activity and AI summaries.
         </p>
       </Column>
       
       <Column lg={5} md={4} sm={4}>
-        <Tile className="impeccable-tile animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <h3 style={{ marginBottom: '1rem', color: '#f4f4f4', fontWeight: 600 }}>Missed Calls</h3>
-          <p className="impeccable-value impeccable-value-danger">{missedCount}</p>
+        <Tile style={{ backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }} className="animate-fade-in">
+          <h3 style={{ marginBottom: '1rem', color: '#161616', fontWeight: 600 }}>Missed Calls</h3>
+          <p style={{ color: '#da1e28', fontSize: '2.5rem', fontWeight: 300 }}>{missedCount}</p>
         </Tile>
       </Column>
       
       <Column lg={5} md={4} sm={4}>
-        <Tile className="impeccable-tile animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <h3 style={{ marginBottom: '1rem', color: '#f4f4f4', fontWeight: 600 }}>Voicemails</h3>
-          <p className="impeccable-value">0</p>
+        <Tile style={{ backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }} className="animate-fade-in">
+          <h3 style={{ marginBottom: '1rem', color: '#161616', fontWeight: 600 }}>Voicemails</h3>
+          <p style={{ color: '#161616', fontSize: '2.5rem', fontWeight: 300 }}>0</p>
         </Tile>
       </Column>
       
       <Column lg={6} md={8} sm={4}>
-        <Tile className="impeccable-tile animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          <h3 style={{ marginBottom: '1rem', color: '#f4f4f4', fontWeight: 600 }}>Current Status</h3>
-          <p className="impeccable-value impeccable-value-success" style={{ fontSize: '2.5rem' }}>Available</p>
+        <Tile style={{ backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }} className="animate-fade-in">
+          <h3 style={{ marginBottom: '1rem', color: '#161616', fontWeight: 600 }}>Current Status</h3>
+          <p style={{ color: '#24a148', fontSize: '2.5rem', fontWeight: 300 }}>Available</p>
         </Tile>
       </Column>
 
       <Column lg={16} md={8} sm={4} style={{ marginTop: '2rem' }}>
-        <DataTable rows={calls} headers={headers}>
-          {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
-            <TableContainer title="Recent Calls">
-              <Table {...getTableProps()}>
-                <TableHead>
-                  <TableRow>
-                    {headers.map((header) => {
-                      const { key, ...rest } = getHeaderProps({ header });
+        <Tile style={{ padding: '0', backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }}>
+          <DataTable rows={calls.length > 0 ? calls : [
+            // Mock data for AI Summaries until API provides them
+            { id: '1', from: '+20 100 123 4567', to: 'Me', duration: '03:15', status: 'Completed', aiSummary: 'Client requested a callback regarding pricing. High intent to buy.', time: new Date().toLocaleString() },
+            { id: '2', from: 'Me', to: '+971 50 987 6543', duration: '01:20', status: 'Completed', aiSummary: 'Followed up on email. Client was busy, call again tomorrow.', time: new Date().toLocaleString() }
+          ]} headers={headers}>
+            {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) => (
+              <TableContainer title="Recent Calls & Summaries">
+                <Table {...getTableProps()}>
+                  <TableHead>
+                    <TableRow>
+                      {headers.map((header) => {
+                        const { key, ...rest } = getHeaderProps({ header });
+                        return (
+                          <TableHeader key={key} {...rest}>
+                            {header.header}
+                          </TableHeader>
+                        );
+                      })}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {rows.map((row) => {
+                      const { key, ...rest } = getRowProps({ row });
                       return (
-                        <TableHeader key={key} {...rest}>
-                          {header.header}
-                        </TableHeader>
+                        <TableRow key={key} {...rest}>
+                          {row.cells.map((cell) => (
+                            <TableCell key={cell.id}>{cell.value}</TableCell>
+                          ))}
+                        </TableRow>
                       );
                     })}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((row) => {
-                    const { key, ...rest } = getRowProps({ row });
-                    return (
-                      <TableRow key={key} {...rest}>
-                        {row.cells.map((cell) => (
-                          <TableCell key={cell.id}>{cell.value}</TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </DataTable>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </DataTable>
+        </Tile>
       </Column>
     </Grid>
   );
