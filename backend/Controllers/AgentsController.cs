@@ -63,6 +63,11 @@ namespace backend.Controllers
             agent.PromptContext = agentUpdates.PromptContext;
             agent.WelcomeMessage = agentUpdates.WelcomeMessage;
             agent.VoiceId = agentUpdates.VoiceId;
+            agent.Language = agentUpdates.Language;
+            agent.Dialect = agentUpdates.Dialect;
+            agent.Emotion = agentUpdates.Emotion;
+            agent.SpeakingStyle = agentUpdates.SpeakingStyle;
+            agent.FallbackNumber = agentUpdates.FallbackNumber;
 
             await _context.SaveChangesAsync();
             return NoContent();
