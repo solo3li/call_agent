@@ -58,10 +58,10 @@ traefik:
 # ── OpenSIPS ────────────────────────────────────────────────────
 opensips:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: cpaas/opensips
-    tag: "3.5"
+    tag: "3.5-fixed"
   service:
     type: LoadBalancer
     annotations:
@@ -108,10 +108,10 @@ rtpengine:
       cpu: "2000m"
       memory: "2Gi"
 
-# ── FreeSWITCH ──────────────────────────────────────────────────
+# ── FreeSWITCH ───────────────────────────────────────────
 freeswitch:
   enabled: true
-  replicaCount: 2   # StatefulSet
+  replicaCount: 1   # StatefulSet
   image:
     repository: cpaas/freeswitch
     tag: "1.10"
@@ -122,52 +122,34 @@ freeswitch:
     esl: 8021
   resources:
     requests:
-      cpu: "500m"
-      memory: "1Gi"
-    limits:
-      cpu: "4000m"
-      memory: "4Gi"
-  persistence:
-    logs:
-      size: "10Gi"
-      storageClass: ""
-  # ESL password — override via --set or secrets
-  eslPassword: "CHANGE_ME_ESL_PASSWORD"
-
-# ── LiveKit Server ───────────────────────────────────────────────
-livekit:
-  enabled: true
-  replicaCount: 2
-  image:
-    repository: livekit/livekit-server
-    tag: "latest"
-  apiKey: "CHANGE_ME_LK_KEY"
-  apiSecret: "CHANGE_ME_LK_SECRET_32_CHARS_MIN"
-  rtcConfig:
-    tcpPort: 7881
-    portRangeStart: 50000
-    portRangeEnd: 60000
-    useExternalIP: true
-  resources:
-    requests:
-      cpu: "500m"
+      cpu: "250m"
       memory: "512Mi"
     limits:
       cpu: "2000m"
       memory: "2Gi"
-  webhook:
-    apiKey: "CHANGE_ME_LK_KEY"
-    urls:
-      - "http://backend-api.control-plane.svc.cluster.local:8080/api/webhook/livekit"
+  persistence:
+    logs:
+      size: "5Gi"
+      storageClass: ""
+  # ESL password — override via --set or secrets
+  eslPassword: "CHANGE_ME_ESL_PASSWORD"
 
-# ── LiveKit SIP Gateway ──────────────────────────────────────────
-livekitSip:
+# ── LiveKit Server ─────────────────────────────────────────
+livekit:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
-    repository: livekit/sip
+    repository: livekit/livekit-server
     tag: "latest"
-  port: 5060
+  livekit:
+    keys:
+      "CHANGE_ME_LK_KEY": "CHANGE_ME_LK_SECRET_32_CHARS_MIN"
+    rtc:
+      tcp_port: 7881
+      port_range_start: 50000
+      port_range_end: 60000
+      use_external_ip: false
+
   resources:
     requests:
       cpu: "250m"
@@ -175,6 +157,26 @@ livekitSip:
     limits:
       cpu: "1000m"
       memory: "1Gi"
+  webhook:
+    apiKey: "CHANGE_ME_LK_KEY"
+    urls:
+      - "http://backend-api.control-plane.svc.cluster.local:8080/api/webhook/livekit"
+
+# ── LiveKit SIP Gateway ────────────────────────────────
+livekitSip:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: livekit/sip
+    tag: "latest"
+  port: 5060
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
 
 # ── Go AI Agent ──────────────────────────────────────────────────
 goAgent:
@@ -276,19 +278,30 @@ redis:
     persistence:
       size: "8Gi"
 
-# ── MinIO (Bitnami) ──────────────────────────────────────────────
+# ── MinIO (official chart) ───────────────────────────────────────
 minio:
   enabled: true
   rootUser: "admin"
   rootPassword: "CHANGE_ME_MINIO_PASS"
+  mode: standalone
+  replicas: 1
+  persistence:
+    enabled: true
+    size: "10Gi"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
   buckets:
     - name: recordings
       policy: public
+      purge: false
     - name: knowledge-base
       policy: public
-  persistence:
-    enabled: true
-    size: "50Gi"
+      purge: false
 
 # ── Monitoring ───────────────────────────────────────────────────
 monitoring:

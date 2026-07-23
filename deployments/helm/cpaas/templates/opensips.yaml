@@ -56,16 +56,14 @@ spec:
           resources:
             {{- toYaml .Values.opensips.resources | nindent 12 }}
           livenessProbe:
-            httpGet:
-              path: /mi/which
-              port: {{ .Values.opensips.ports.mi }}
+            tcpSocket:
+              port: {{ .Values.opensips.ports.sip }}
             initialDelaySeconds: 15
             periodSeconds: 10
           readinessProbe:
-            httpGet:
-              path: /mi/which
-              port: {{ .Values.opensips.ports.mi }}
-            initialDelaySeconds: 5
+            tcpSocket:
+              port: {{ .Values.opensips.ports.sip }}
+            initialDelaySeconds: 15
             periodSeconds: 5
 
 ---

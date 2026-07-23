@@ -59,15 +59,15 @@ spec:
           resources:
             {{- toYaml .Values.freeswitch.resources | nindent 12 }}
           livenessProbe:
-            exec:
-              command: ["fs_cli", "-x", "status"]
+            tcpSocket:
+              port: 8021
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 10
           readinessProbe:
             tcpSocket:
-              port: {{ .Values.freeswitch.ports.sipExternal }}
-            initialDelaySeconds: 15
+              port: 8021
+            initialDelaySeconds: 10
             periodSeconds: 10
           volumeMounts:
             - name: freeswitch-logs
