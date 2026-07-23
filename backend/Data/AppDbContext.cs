@@ -15,6 +15,7 @@ namespace backend.Data
         public DbSet<CallRecord> CallRecords { get; set; }
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
         public DbSet<SipAccount> SipAccounts { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
