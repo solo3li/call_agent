@@ -5,7 +5,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opensips
-  namespace: {{ .Values.global.namespaces.voipEdge }}
   labels:
     app: opensips
     {{- include "cpaas.labels" . | nindent 4 }}
@@ -75,7 +74,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opensips-sip
-  namespace: {{ .Values.global.namespaces.voipEdge }}
   labels:
     app: opensips
   annotations:
@@ -104,7 +102,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: opensips-mi
-  namespace: {{ .Values.global.namespaces.voipEdge }}
 spec:
   type: ClusterIP
   selector:
@@ -118,7 +115,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: opensips-hpa
-  namespace: {{ .Values.global.namespaces.voipEdge }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

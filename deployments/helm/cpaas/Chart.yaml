@@ -45,7 +45,7 @@ dependencies:
     alias: traefik
 
   # ── LiveKit ──────────────────────────────────────────
-  - name: livekit-server
+   - name: livekit-server
     version: "1.x.x"
     repository: https://helm.livekit.io
     condition: livekit.enabled

@@ -4,7 +4,6 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: cpaas-api
-  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
   entryPoints:
     - websecure
@@ -25,7 +24,6 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: cpaas-frontend
-  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
   entryPoints:
     - websecure
@@ -43,7 +41,6 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: cpaas-livekit-ws
-  namespace: {{ .Values.global.namespaces.aiEngine }}
 spec:
   entryPoints:
     - websecure
@@ -51,7 +48,7 @@ spec:
     - match: Host(`ws.{{ .Values.global.domain }}`)
       kind: Rule
       services:
-        - name: livekit-server
+        - name: cpaas-livekit
           port: 7880
       middlewares:
         - name: cpaas-websocket
@@ -63,7 +60,6 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: cpaas-http-redirect
-  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
   entryPoints:
     - web
@@ -81,7 +77,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: cpaas-cors
-  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
   headers:
     accessControlAllowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
@@ -96,7 +91,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: cpaas-ratelimit
-  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
   rateLimit:
     average: 100
@@ -107,7 +101,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: cpaas-https-redirect
-  namespace: {{ .Values.global.namespaces.controlPlane }}
 spec:
   redirectScheme:
     scheme: https
@@ -117,7 +110,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: cpaas-websocket
-  namespace: {{ .Values.global.namespaces.aiEngine }}
 spec:
   headers:
     customRequestHeaders:
