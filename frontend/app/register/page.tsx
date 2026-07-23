@@ -1,99 +1,128 @@
 'use client';
 
-import { useState } from 'react';
-import { Form, TextInput, Button, InlineNotification } from '@carbon/react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import styles from './page.module.css';
 
-export default function RegisterPage() {
+export default function Register() {
+  const router = useRouter();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [tenantName, setTenantName] = useState('');
-  const [error, setError] = useState('');
+  const [accountType, setAccountType] = useState<'developer' | 'user'>('developer');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, tenantName }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        // Auto-login after register
-        const loginRes = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const loginData = await loginRes.json();
-        if (loginRes.ok) {
-          document.cookie = `token=${loginData.token}; path=/; max-age=604800; samesite=strict`;
-          router.push('/');
-          router.refresh();
-        } else {
-          router.push('/login');
-        }
-      } else {
-        setError(data.message || 'Registration failed');
-      }
-    } catch (err) {
-      setError('Network error occurred');
-    } finally {
+    
+    // Simulate API call
+    setTimeout(() => {
       setLoading(false);
-    }
+      if (accountType === 'developer') {
+        router.push('/dashboard/developer');
+      } else {
+        router.push('/dashboard/user');
+      }
+    }, 1200);
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '4rem auto', padding: '2rem', background: '#262626' }}>
-      <h1 style={{ marginBottom: '1rem', color: '#f4f4f4' }}>Register</h1>
-      <p style={{ marginBottom: '2rem', color: '#c6c6c6' }}>Create a new tenant workspace for your company</p>
+    <div className={styles.container}>
+      <div className={`${styles.authCard} glass-panel`}>
+        <h1 className={styles.logo}>Create Account</h1>
+        <p className={styles.subtitle}>Join the next-gen CPaaS platform</p>
+        
+        <form className={styles.form} onSubmit={handleRegister}>
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label} htmlFor="firstName">First Name</label>
+              <input 
+                className={styles.input}
+                type="text" 
+                id="firstName" 
+                placeholder="John" 
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label} htmlFor="lastName">Last Name</label>
+              <input 
+                className={styles.input}
+                type="text" 
+                id="lastName" 
+                placeholder="Doe" 
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required 
+              />
+            </div>
+          </div>
 
-      {error && <InlineNotification kind="error" title="Error" subtitle={error} style={{ marginBottom: '1rem' }} />}
+          <div className={styles.inputGroup}>
+            <label className={styles.label} htmlFor="email">Email Address</label>
+            <input 
+              className={styles.input}
+              type="email" 
+              id="email" 
+              placeholder="you@example.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
+          </div>
+          
+          <div className={styles.inputGroup}>
+            <label className={styles.label} htmlFor="password">Password</label>
+            <input 
+              className={styles.input}
+              type="password" 
+              id="password" 
+              placeholder="Create a strong password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required 
+              minLength={8}
+            />
+          </div>
 
-      <Form onSubmit={handleRegister}>
-        <TextInput
-          id="tenantName"
-          type="text"
-          labelText="Company Name (Workspace)"
-          value={tenantName}
-          onChange={(e) => setTenantName(e.target.value)}
-          required
-          style={{ marginBottom: '1rem' }}
-        />
-        <TextInput
-          id="email"
-          type="email"
-          labelText="Email address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ marginBottom: '1rem' }}
-        />
-        <TextInput
-          id="password"
-          type="password"
-          labelText="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ marginBottom: '2rem' }}
-        />
-        <Button type="submit" disabled={loading} style={{ width: '100%', marginBottom: '1rem' }}>
-          {loading ? 'Registering...' : 'Register Account'}
-        </Button>
-      </Form>
-      
-      <p style={{ marginTop: '1rem', color: '#c6c6c6', textAlign: 'center' }}>
-        Already have an account? <Link href="/login" style={{ color: '#0f62fe' }}>Login here</Link>
-      </p>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Account Type</label>
+            <div className={styles.accountTypeContainer}>
+              <div 
+                className={`${styles.typeCard} ${accountType === 'developer' ? styles.selected : ''}`}
+                onClick={() => setAccountType('developer')}
+              >
+                <div className={styles.typeIcon}>💻</div>
+                <div className={styles.typeTitle}>Developer</div>
+                <div className={styles.typeDesc}>APIs, Webhooks, SIP Trunks</div>
+              </div>
+              
+              <div 
+                className={`${styles.typeCard} ${accountType === 'user' ? styles.selected : ''}`}
+                onClick={() => setAccountType('user')}
+              >
+                <div className={styles.typeIcon}>🎧</div>
+                <div className={styles.typeTitle}>Regular User</div>
+                <div className={styles.typeDesc}>Web Phone & Cloud PBX</div>
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" className={styles.button} disabled={loading}>
+            {loading ? 'Creating account...' : 'Create Account'}
+          </button>
+        </form>
+        
+        <p className={styles.linkText}>
+          Already have an account? 
+          <Link href="/login" className={styles.link}>Sign in</Link>
+        </p>
+      </div>
     </div>
   );
 }

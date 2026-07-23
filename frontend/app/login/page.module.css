@@ -1,0 +1,110 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: radial-gradient(circle at 50% -20%, #2a2a35, var(--bg-dark) 60%);
+}
+
+.authCard {
+  width: 100%;
+  max-width: 440px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: 2.5rem;
+  font-size: 1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 1rem;
+  transition: var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.button {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  margin-top: 0.5rem;
+}
+
+.button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.linkText {
+  margin-top: 2rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  transition: var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--text-main);
+}
