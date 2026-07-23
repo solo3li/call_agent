@@ -9,7 +9,7 @@ cfg_tmp="/tmp/opensips.cfg"
 echo "OpenSIPS: Substituting environment variables..."
 echo "OpenSIPS: DB_HOST=${OPENSIPS_DB_HOST}"
 
-envsubst < "$cfg_src" > "$cfg_tmp"
+envsubst '${OPENSIPS_DB_HOST} ${OPENSIPS_DB_PASS}' < "$cfg_src" > "$cfg_tmp"
 cp "$cfg_tmp" "$cfg_src"
 
 echo "OpenSIPS: Starting..."

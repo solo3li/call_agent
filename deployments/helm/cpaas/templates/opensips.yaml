@@ -10,16 +10,11 @@ metadata:
     {{- include "cpaas.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.opensips.replicaCount }}
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: opensips
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate
   template:
     metadata:
       labels:
@@ -78,10 +73,8 @@ metadata:
   name: opensips-sip
   labels:
     app: opensips
-  annotations:
-    metallb.universe.tf/address-pool: voip-pool
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: opensips
   ports:
@@ -97,7 +90,6 @@ spec:
       port: {{ .Values.opensips.ports.hep }}
       targetPort: {{ .Values.opensips.ports.hep }}
       protocol: UDP
-  externalTrafficPolicy: Local
 ---
 # ── OpenSIPS Internal Service (Management Interface) ─────────────────
 apiVersion: v1
