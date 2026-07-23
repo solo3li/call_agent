@@ -61,7 +61,7 @@ opensips:
   replicaCount: 1
   image:
     repository: cpaas/opensips
-    tag: "3.5-fixed"
+    tag: "3.5-fixed-3"
   service:
     type: LoadBalancer
     annotations:
