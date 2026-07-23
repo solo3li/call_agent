@@ -9,6 +9,7 @@ export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accountType, setAccountType] = useState<'developer' | 'user'>('developer');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -28,12 +29,10 @@ export default function Login() {
         localStorage.setItem('token', data.token);
         document.cookie = `token=${data.token}; path=/; max-age=604800; samesite=strict`;
         
-        // Very basic JWT decode to determine role if we had a role claim.
-        // For now, redirect based on developer/user intent or default to developer
-        if (email.includes('user')) {
-          router.push('/dashboard/user');
-        } else {
+        if (accountType === 'developer') {
           router.push('/dashboard/developer');
+        } else {
+          router.push('/dashboard/user');
         }
       } else {
         alert(data.message || 'Login failed');
@@ -76,6 +75,27 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required 
             />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Account Type</label>
+            <div className={styles.accountTypeContainer}>
+              <div 
+                className={`${styles.typeCard} ${accountType === 'developer' ? styles.selected : ''}`}
+                onClick={() => setAccountType('developer')}
+              >
+                <div className={styles.typeIcon}>💻</div>
+                <div className={styles.typeTitle}>Developer</div>
+              </div>
+              
+              <div 
+                className={`${styles.typeCard} ${accountType === 'user' ? styles.selected : ''}`}
+                onClick={() => setAccountType('user')}
+              >
+                <div className={styles.typeIcon}>🎧</div>
+                <div className={styles.typeTitle}>Regular User</div>
+              </div>
+            </div>
           </div>
           
           <button type="submit" className={styles.button} disabled={loading}>
