@@ -5,7 +5,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: go-agent
-  namespace: {{ .Values.global.namespaces.aiEngine }}
   labels:
     app: go-agent
     {{- include "cpaas.labels" . | nindent 4 }}
@@ -68,7 +67,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: go-agent
-  namespace: {{ .Values.global.namespaces.aiEngine }}
 spec:
   type: ClusterIP
   selector:
@@ -82,7 +80,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: go-agent-hpa
-  namespace: {{ .Values.global.namespaces.aiEngine }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

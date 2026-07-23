@@ -54,32 +54,32 @@ build_images() {
 
     # Backend (ASP.NET)
     log_info "Building backend..."
-    docker build -t cpaas-backend:latest ./backend/
+    docker build -t cpaas/backend:latest ./backend/
     log_ok "Backend image built"
 
     # Go Agent
     log_info "Building Go agent..."
-    docker build -t cpaas-go-agent:latest ./agent/
+    docker build -t cpaas/go-agent:latest ./agent/
     log_ok "Go agent image built"
 
     # Frontend
     if [ -d "./frontend" ]; then
         log_info "Building frontend..."
-        docker build -t cpaas-frontend:latest ./frontend/
+        docker build -t cpaas/frontend:latest ./frontend/
         log_ok "Frontend image built"
     fi
 
     # OpenSIPS custom image
     if [ -d "./deployments/docker/opensips" ]; then
         log_info "Building OpenSIPS image..."
-        docker build -t cpaas-opensips:3.5 ./deployments/docker/opensips/
+        docker build -t cpaas/opensips:3.5 ./deployments/docker/opensips/
         log_ok "OpenSIPS image built"
     fi
 
     # FreeSWITCH custom image
     if [ -d "./deployments/docker/freeswitch" ]; then
         log_info "Building FreeSWITCH image..."
-        docker build -t cpaas-freeswitch:1.10 ./deployments/docker/freeswitch/
+        docker build -t cpaas/freeswitch:1.10 ./deployments/docker/freeswitch/
         log_ok "FreeSWITCH image built"
     fi
 
@@ -95,15 +95,17 @@ load_images_to_k8s() {
     # Detect cluster type
     if command -v k3s >/dev/null 2>&1; then
         log_info "k3s detected — importing images..."
-        for img in cpaas-backend:latest cpaas-go-agent:latest cpaas-frontend:latest; do
+        for img in cpaas/backend:latest cpaas/go-agent:latest cpaas/frontend:latest cpaas/opensips:3.5 cpaas/freeswitch:1.10; do
             docker save "$img" | sudo k3s ctr images import -
         done
         log_ok "Images loaded into k3s"
     elif command -v minikube >/dev/null 2>&1; then
         log_info "minikube detected — loading images..."
-        minikube image load cpaas-backend:latest
-        minikube image load cpaas-go-agent:latest
-        minikube image load cpaas-frontend:latest
+        minikube image load cpaas/backend:latest
+        minikube image load cpaas/go-agent:latest
+        minikube image load cpaas/frontend:latest
+        minikube image load cpaas/opensips:3.5
+        minikube image load cpaas/freeswitch:1.10
         log_ok "Images loaded into minikube"
     else
         log_warn "Unknown cluster type — make sure images are available in your registry"
@@ -154,12 +156,12 @@ deploy_helm() {
 
     # Deploy
     helm upgrade --install "${HELM_RELEASE}" "${HELM_CHART}" \
+        --namespace cpaas \
         -f "${VALUES_FILE}" \
         ${EXTRA_VALUES} \
         --create-namespace \
         --wait \
-        --timeout 10m \
-        --atomic \
+        --timeout 5m \
         "$@"
 
     log_ok "Helm deployment complete!"
