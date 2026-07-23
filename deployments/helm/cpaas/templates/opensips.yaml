@@ -10,6 +10,8 @@ metadata:
     {{- include "cpaas.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.opensips.replicaCount }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: opensips
@@ -27,6 +29,8 @@ spec:
         prometheus.io/port: "{{ .Values.opensips.ports.mi }}"
         # Config is baked into image
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: opensips
           image: "{{ .Values.opensips.image.repository }}:{{ .Values.opensips.image.tag }}"
