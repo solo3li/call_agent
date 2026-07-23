@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     opensips-http-modules \
     opensips-json-module \
     opensips-tls-module \
+    opensips-auth-modules \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy config files
@@ -16,4 +17,4 @@ EXPOSE 5060/udp
 EXPOSE 5060/tcp
 EXPOSE 8888/tcp
 
-CMD ["opensips", "-FE", "-f", "/etc/opensips/opensips.cfg"]
+CMD ["opensips", "-F", "-f", "/etc/opensips/opensips.cfg"]

@@ -20,20 +20,20 @@ maintainers:
 dependencies:
   # ── Data Layer ──────────────────────────────────────
   - name: postgresql
-    version: "15.x.x"
+    version: "18.x.x"
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
     alias: postgresql
 
   - name: redis
-    version: "20.x.x"
+    version: "27.x.x"
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
     alias: redis
 
   - name: minio
-    version: "14.x.x"
-    repository: https://charts.bitnami.com/bitnami
+    version: "5.x.x"
+    repository: https://charts.min.io/
     condition: minio.enabled
     alias: minio
 
@@ -45,7 +45,7 @@ dependencies:
     alias: traefik
 
   # ── LiveKit ──────────────────────────────────────────
-   - name: livekit-server
+  - name: livekit-server
     version: "1.x.x"
     repository: https://helm.livekit.io
     condition: livekit.enabled
