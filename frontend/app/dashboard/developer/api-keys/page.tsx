@@ -96,27 +96,33 @@ export default function ApiKeysPage() {
               <Table {...getTableProps()}>
                 <TableHead>
                   <TableRow>
-                    {headers.map((header) => (
-                      <TableHeader {...getHeaderProps({ header })}>
-                        {header.header}
-                      </TableHeader>
-                    ))}
+                    {headers.map((header) => {
+                      const { key, ...rest } = getHeaderProps({ header });
+                      return (
+                        <TableHeader key={key} {...rest}>
+                          {header.header}
+                        </TableHeader>
+                      );
+                    })}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map((row) => (
-                    <TableRow {...getRowProps({ row })}>
-                      {row.cells.map((cell) => (
-                        <TableCell key={cell.id}>
-                          {cell.info.header === 'actions' ? (
-                            <Button kind="danger--ghost" size="sm" hasIconOnly iconDescription="Delete" renderIcon={TrashCan} onClick={() => handleDelete(row.id)} />
-                          ) : (
-                            cell.value
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
+                  {rows.map((row) => {
+                    const { key, ...rest } = getRowProps({ row });
+                    return (
+                      <TableRow key={key} {...rest}>
+                        {row.cells.map((cell) => (
+                          <TableCell key={cell.id}>
+                            {cell.info.header === 'actions' ? (
+                              <Button kind="danger--ghost" size="sm" hasIconOnly iconDescription="Delete" renderIcon={TrashCan} onClick={() => handleDelete(row.id)} />
+                            ) : (
+                              cell.value
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
