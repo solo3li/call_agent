@@ -1,19 +1,71 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Grid, Column, Button, DataTable, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, TableContainer, TableToolbar, TableToolbarContent } from '@carbon/react';
-import { Add } from '@carbon/icons-react';
+import { Add, TrashCan } from '@carbon/icons-react';
+import { apiFetch } from '@/lib/api';
 
 export default function SipTrunksPage() {
-  const rows = [
-    { id: '1', name: 'Main HQ PBX', username: '1001', domain: 'cpaas.yourdomain.com', status: 'Registered' },
-  ];
-  
+  const [accounts, setAccounts] = useState<any[]>([]);
+
+  const fetchAccounts = async () => {
+    try {
+      const res = await apiFetch('/api/sipaccounts');
+      if (res.ok) {
+        const data = await res.json();
+        setAccounts(data.map((s: any) => ({
+          id: s.id,
+          name: 'SIP Endpoint',
+          username: s.username,
+          password: s.password,
+          domain: s.domain,
+          status: 'Offline'
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching SIP accounts', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const handleCreate = async () => {
+    try {
+      const res = await apiFetch('/api/sipaccounts', { method: 'POST' });
+      if (res.ok) {
+        fetchAccounts();
+      } else {
+        alert('Failed to create SIP endpoint');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this SIP endpoint?')) return;
+    try {
+      const res = await apiFetch(`/api/sipaccounts/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchAccounts();
+      }
+    } catch (err) {
+      alert('Failed to delete SIP endpoint');
+    }
+  };
+
   const headers = [
     { key: 'name', header: 'Name' },
     { key: 'username', header: 'SIP Username' },
+    { key: 'password', header: 'SIP Password' },
     { key: 'domain', header: 'SIP Domain' },
     { key: 'status', header: 'Status' },
+    { key: 'actions', header: '' }
   ];
+
+  const rows = accounts.map(a => ({ ...a, actions: 'delete' }));
 
   return (
     <Grid>
@@ -30,7 +82,7 @@ export default function SipTrunksPage() {
             <TableContainer title="SIP Credentials">
               <TableToolbar>
                 <TableToolbarContent>
-                  <Button renderIcon={Add}>Create SIP Endpoint</Button>
+                  <Button renderIcon={Add} onClick={handleCreate}>Create SIP Endpoint</Button>
                 </TableToolbarContent>
               </TableToolbar>
               <Table {...getTableProps()}>
@@ -47,7 +99,13 @@ export default function SipTrunksPage() {
                   {rows.map((row) => (
                     <TableRow {...getRowProps({ row })}>
                       {row.cells.map((cell) => (
-                        <TableCell key={cell.id}>{cell.value}</TableCell>
+                        <TableCell key={cell.id}>
+                          {cell.info.header === 'actions' ? (
+                            <Button kind="danger--ghost" size="sm" hasIconOnly iconDescription="Delete" renderIcon={TrashCan} onClick={() => handleDelete(row.id)} />
+                          ) : (
+                            cell.value
+                          )}
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))}

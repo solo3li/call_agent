@@ -18,15 +18,46 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      if (accountType === 'developer') {
-        router.push('/dashboard/developer');
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          password,
+          tenantName: `${firstName} ${lastName}`
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        // Automatically log in after registration
+        const loginRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const loginData = await loginRes.json();
+        
+        if (loginRes.ok && loginData.token) {
+          localStorage.setItem('token', loginData.token);
+          if (accountType === 'developer') {
+            router.push('/dashboard/developer');
+          } else {
+            router.push('/dashboard/user');
+          }
+        } else {
+          router.push('/login');
+        }
       } else {
-        router.push('/dashboard/user');
+        alert(data.message || 'Registration failed');
       }
-    }, 1200);
+    } catch (err) {
+      alert('Network error during registration');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

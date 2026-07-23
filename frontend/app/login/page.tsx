@@ -15,16 +15,33 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      // Determine dashboard based on user role (mock logic)
-      if (email.includes('dev')) {
-        router.push('/dashboard/developer');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        
+        // Very basic JWT decode to determine role if we had a role claim.
+        // For now, redirect based on developer/user intent or default to developer
+        if (email.includes('user')) {
+          router.push('/dashboard/user');
+        } else {
+          router.push('/dashboard/developer');
+        }
       } else {
-        router.push('/dashboard/user');
+        alert(data.message || 'Login failed');
       }
-    }, 1000);
+    } catch (err) {
+      alert('Network error during login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
