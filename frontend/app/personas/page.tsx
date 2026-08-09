@@ -18,8 +18,16 @@ import {
 import { Add, Store } from '@carbon/icons-react';
 import Link from 'next/link';
 
+interface Persona {
+  id: string;
+  name: string;
+  provider: string;
+  voice: string;
+  active: string;
+}
+
 export default function PersonasPage() {
-  const [personas, setPersonas] = useState([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
   
   useEffect(() => {
     // Fetch personas from API (mocked for now)

@@ -18,9 +18,9 @@ namespace backend.Controllers
     {
         private readonly TenantDbContext _context;
         private readonly SharedDbContext _sharedDb;
-        private readonly ILicenseService _licenseService;
+        private readonly backend.Services.ILicenseService _licenseService;
 
-        public CallsController(TenantDbContext context, SharedDbContext sharedDb, ILicenseService licenseService)
+        public CallsController(TenantDbContext context, SharedDbContext sharedDb, backend.Services.ILicenseService licenseService)
         {
             _context = context;
             _sharedDb = sharedDb;
