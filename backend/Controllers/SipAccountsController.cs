@@ -16,9 +16,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class SipAccountsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly SharedDbContext _context;
 
-        public SipAccountsController(AppDbContext context)
+        public SipAccountsController(SharedDbContext context)
         {
             _context = context;
         }
@@ -27,8 +27,7 @@ namespace backend.Controllers
         public async Task<ActionResult<IEnumerable<SipAccount>>> GetSipAccounts()
         {
             var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
+            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
 
             var accounts = await _context.SipAccounts
                 .Where(s => s.TenantId == tenantId)
@@ -42,13 +41,12 @@ namespace backend.Controllers
         public async Task<ActionResult<SipAccount>> CreateSipAccount()
         {
             var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
+            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
 
             var random = new Random();
             var username = "ext" + random.Next(1000, 9999).ToString();
             var password = Guid.NewGuid().ToString("N").Substring(0, 12);
-            var domain = "cpaas.178.62.192.74.nip.io"; // External IP or domain for the SIP server
+            var domain = "cpaas.178.62.192.74.nip.io";
 
             var sipAccount = new SipAccount
             {
@@ -68,8 +66,7 @@ namespace backend.Controllers
         public async Task<IActionResult> DeleteSipAccount(Guid id)
         {
             var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
+            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
 
             var sipAccount = await _context.SipAccounts.FirstOrDefaultAsync(s => s.Id == id && s.TenantId == tenantId);
             if (sipAccount == null)

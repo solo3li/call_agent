@@ -5,12 +5,13 @@ namespace backend.Models
     public class CallRecord
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public Guid TenantId { get; set; }
-        public Tenant? Tenant { get; set; }
 
         // Agent can be null for CDR records that arrive before agent lookup
         public Guid? AiAgentId { get; set; }
         public AiAgent? AiAgent { get; set; }
+
+        public Guid? PersonaId { get; set; }
+        public Persona? Persona { get; set; }
 
         // Call identification
         public string CallerNumber { get; set; } = string.Empty;

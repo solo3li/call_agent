@@ -16,9 +16,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class WebhooksController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly TenantDbContext _context;
 
-        public WebhooksController(AppDbContext context)
+        public WebhooksController(TenantDbContext context)
         {
             _context = context;
         }
@@ -26,21 +26,12 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Webhook>>> GetWebhooks()
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            return await _context.Webhooks.Where(w => w.TenantId == tenantId).ToListAsync();
+            return await _context.Webhooks.ToListAsync();
         }
 
         [HttpPost]
         public async Task<ActionResult<Webhook>> CreateWebhook(Webhook webhook)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            webhook.TenantId = tenantId;
             _context.Webhooks.Add(webhook);
             await _context.SaveChangesAsync();
 
@@ -50,11 +41,7 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateWebhook(Guid id, Webhook webhookUpdates)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            var webhook = await _context.Webhooks.FirstOrDefaultAsync(w => w.Id == id && w.TenantId == tenantId);
+            var webhook = await _context.Webhooks.FirstOrDefaultAsync(w => w.Id == id);
             if (webhook == null)
                 return NotFound();
 
@@ -69,11 +56,7 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWebhook(Guid id)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            var webhook = await _context.Webhooks.FirstOrDefaultAsync(w => w.Id == id && w.TenantId == tenantId);
+            var webhook = await _context.Webhooks.FirstOrDefaultAsync(w => w.Id == id);
             if (webhook == null)
                 return NotFound();
 

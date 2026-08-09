@@ -16,13 +16,13 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class ConnectionController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly TenantDbContext _tenantDb;
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public ConnectionController(AppDbContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public ConnectionController(TenantDbContext tenantDb, IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
-            _context = context;
+            _tenantDb = tenantDb;
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
         }
@@ -56,12 +56,8 @@ namespace backend.Controllers
         [HttpPost("token")]
         public async Task<ActionResult<CreateTokenResponseDto>> CreateToken([FromBody] CreateTokenRequestDto request)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            // Verify the agent belongs to the tenant
-            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == request.AgentId && a.TenantId == tenantId);
+            // Verify the agent exists in the current tenant's schema
+            var agent = await _tenantDb.Agents.Include(a => a.Persona).FirstOrDefaultAsync(a => a.Id == request.AgentId);
             if (agent == null)
                 return NotFound("Agent not found.");
 
@@ -94,8 +90,8 @@ namespace backend.Controllers
             var workerPayload = new
             {
                 room_name = roomName,
-                ai_provider = agent.Provider,
-                system_prompt = agent.PromptContext,
+                ai_provider = agent.Persona?.Provider ?? "google",
+                system_prompt = agent.Persona?.SystemPrompt ?? "You are a helpful assistant.",
                 metadata = request.Metadata
             };
 
@@ -129,10 +125,6 @@ namespace backend.Controllers
         [HttpPost("transfer-token")]
         public ActionResult<CreateTokenResponseDto> CreateTransferToken([FromBody] CreateTransferTokenRequestDto request)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
             string livekitApiKey = _configuration["LIVEKIT_API_KEY"] ?? "devkey";
             string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "livekit_secret_key_1234567890123";
             string livekitUrl = _configuration["LIVEKIT_URL"] ?? "ws://localhost:7880";
@@ -167,10 +159,6 @@ namespace backend.Controllers
         [HttpPost("sip-transfer")]
         public ActionResult InitiateSipTransfer([FromBody] SipTransferRequestDto request)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
             // Here we would use LiveKit Server SDK (or Twirp HTTP API) to call CreateSipParticipant
             // For now, we simulate success since livekit-sip gateway is pending configuration
             

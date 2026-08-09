@@ -16,13 +16,13 @@ namespace backend.Security
 
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
-        private readonly AppDbContext _context;
+        private readonly SharedDbContext _context;
 
         public ApiKeyAuthenticationHandler(
             IOptionsMonitor<ApiKeyAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            AppDbContext context)
+            SharedDbContext context)
             : base(options, logger, encoder)
         {
             _context = context;
@@ -45,9 +45,12 @@ namespace backend.Security
             var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawKey));
             var keyHash = Convert.ToBase64String(hashBytes);
 
-            var apiKey = await _context.ApiKeys.FirstOrDefaultAsync(k => k.KeyHash == keyHash);
-            if (apiKey == null)
-                return AuthenticateResult.Fail("Invalid API Key.");
+            var apiKey = await _context.ApiKeys
+                .Include(k => k.Tenant)
+                .FirstOrDefaultAsync(k => k.KeyHash == keyHash);
+                
+            if (apiKey == null || apiKey.Tenant == null)
+                return AuthenticateResult.Fail("Invalid API Key or Tenant.");
 
             // Update Last Used
             apiKey.LastUsedAt = DateTime.UtcNow;
@@ -56,6 +59,7 @@ namespace backend.Security
             var claims = new[] {
                 new Claim(ClaimTypes.NameIdentifier, apiKey.Id.ToString()),
                 new Claim("TenantId", apiKey.TenantId.ToString()),
+                new Claim("TenantSchema", apiKey.Tenant.SchemaName),
                 new Claim(ClaimTypes.Name, apiKey.Name)
             };
 

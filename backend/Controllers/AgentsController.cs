@@ -16,9 +16,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class AgentsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly TenantDbContext _context;
 
-        public AgentsController(AppDbContext context)
+        public AgentsController(TenantDbContext context)
         {
             _context = context;
         }
@@ -26,21 +26,12 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AiAgent>>> GetAgents()
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-                
-            return await _context.Agents.Where(a => a.TenantId == tenantId).ToListAsync();
+            return await _context.Agents.ToListAsync();
         }
 
         [HttpPost]
         public async Task<ActionResult<AiAgent>> CreateAgent(AiAgent agent)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-            
-            agent.TenantId = tenantId;
             _context.Agents.Add(agent);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAgents), new { id = agent.Id }, agent);
@@ -49,25 +40,13 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAgent(Guid id, AiAgent agentUpdates)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == id && a.TenantId == tenantId);
+            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == id);
             if (agent == null)
                 return NotFound();
 
             agent.Name = agentUpdates.Name;
-            agent.Provider = agentUpdates.Provider;
-            agent.ModelName = agentUpdates.ModelName;
-            agent.PromptContext = agentUpdates.PromptContext;
-            agent.WelcomeMessage = agentUpdates.WelcomeMessage;
-            agent.VoiceId = agentUpdates.VoiceId;
-            agent.Language = agentUpdates.Language;
-            agent.Dialect = agentUpdates.Dialect;
-            agent.Emotion = agentUpdates.Emotion;
-            agent.SpeakingStyle = agentUpdates.SpeakingStyle;
-            agent.FallbackNumber = agentUpdates.FallbackNumber;
+            agent.PersonaId = agentUpdates.PersonaId;
+            agent.IsActive = agentUpdates.IsActive;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -76,11 +55,7 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAgent(Guid id)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
-            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == id && a.TenantId == tenantId);
+            var agent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == id);
             if (agent == null)
                 return NotFound();
 

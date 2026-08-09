@@ -16,9 +16,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class CallsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly TenantDbContext _context;
 
-        public CallsController(AppDbContext context)
+        public CallsController(TenantDbContext context)
         {
             _context = context;
         }
@@ -45,13 +45,9 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CallRecordDto>>> GetCalls()
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
             var calls = await _context.CallRecords
                 .Include(c => c.AiAgent)
-                .Where(c => c.TenantId == tenantId)
+                
                 .OrderByDescending(c => c.StartTime)
                 .Select(c => new CallRecordDto
                 {

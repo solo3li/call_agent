@@ -42,8 +42,12 @@ builder.Services.Configure<backend.Models.FreeSwitchSettings>(builder.Configurat
 
 // Configure Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<SharedDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddDbContext<TenantDbContext>();
+
+builder.Services.AddScoped<backend.Services.ITenantProvider, backend.Services.TenantProvider>();
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_fallback_key_that_is_at_least_32_bytes_long";
@@ -95,14 +99,18 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseAuthentication();
+
+// Add Multi-Tenant Middleware
+app.UseMiddleware<backend.Middleware.TenantMiddleware>();
+
 app.UseAuthorization();
 app.MapControllers();
 
-// Auto Migrate Database
+// Auto Migrate Shared Database
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    var sharedDb = scope.ServiceProvider.GetRequiredService<SharedDbContext>();
+    sharedDb.Database.Migrate();
 }
 
 app.Run();

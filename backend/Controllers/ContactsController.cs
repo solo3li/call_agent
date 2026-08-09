@@ -15,9 +15,9 @@ namespace backend.Controllers
     [Authorize]
     public class ContactsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly TenantDbContext _context;
 
-        public ContactsController(AppDbContext context)
+        public ContactsController(TenantDbContext context)
         {
             _context = context;
         }
@@ -37,7 +37,7 @@ namespace backend.Controllers
         {
             var tenantId = GetTenantId();
             var contacts = await _context.Contacts
-                .Where(c => c.TenantId == tenantId)
+                
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
@@ -51,7 +51,6 @@ namespace backend.Controllers
 
             var newContact = new Contact
             {
-                TenantId = tenantId,
                 Name = contactDto.Name,
                 Extension = contactDto.Extension,
                 Department = contactDto.Department,
@@ -69,7 +68,7 @@ namespace backend.Controllers
         {
             var tenantId = GetTenantId();
             var contact = await _context.Contacts
-                .FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (contact == null)
             {

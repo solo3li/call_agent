@@ -15,9 +15,9 @@ namespace backend.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly TenantDbContext _context;
 
-        public UsersController(AppDbContext context)
+        public UsersController(TenantDbContext context)
         {
             _context = context;
         }

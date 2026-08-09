@@ -18,9 +18,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class ApiKeysController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly SharedDbContext _context;
 
-        public ApiKeysController(AppDbContext context)
+        public ApiKeysController(SharedDbContext context)
         {
             _context = context;
         }
@@ -47,8 +47,7 @@ namespace backend.Controllers
         public async Task<ActionResult<IEnumerable<ApiKeyResponseDto>>> GetApiKeys()
         {
             var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
+            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
 
             var keys = await _context.ApiKeys
                 .Where(k => k.TenantId == tenantId)
@@ -68,10 +67,8 @@ namespace backend.Controllers
         public async Task<ActionResult<ApiKeyCreatedResponseDto>> CreateApiKey([FromBody] CreateApiKeyDto dto)
         {
             var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
+            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
 
-            // Generate a secure random raw key
             var rawBytes = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
@@ -79,7 +76,6 @@ namespace backend.Controllers
             }
             var rawKey = "sk_" + Convert.ToBase64String(rawBytes).Replace("+", "").Replace("/", "").Replace("=", "");
 
-            // Hash the key for storage
             using var sha256 = SHA256.Create();
             var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawKey));
             var keyHash = Convert.ToBase64String(hashBytes);
@@ -99,7 +95,7 @@ namespace backend.Controllers
                 Id = apiKey.Id,
                 Name = apiKey.Name,
                 CreatedAt = apiKey.CreatedAt,
-                RawKey = rawKey // Only returned once!
+                RawKey = rawKey
             };
 
             return CreatedAtAction(nameof(GetApiKeys), new { id = apiKey.Id }, response);
@@ -109,8 +105,7 @@ namespace backend.Controllers
         public async Task<IActionResult> DeleteApiKey(Guid id)
         {
             var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
+            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
 
             var apiKey = await _context.ApiKeys.FirstOrDefaultAsync(k => k.Id == id && k.TenantId == tenantId);
             if (apiKey == null)

@@ -9,55 +9,21 @@ using backend.Data;
 
 #nullable disable
 
-namespace backend.Migrations
+namespace backend.Migrations.Shared
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260711230209_AddApiKeysTable")]
-    partial class AddApiKeysTable
+    [DbContext(typeof(SharedDbContext))]
+    [Migration("20260809183843_InitialShared")]
+    partial class InitialShared
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.28")
+                .HasAnnotation("ProductVersion", "8.0.29")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("backend.Models.AiAgent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PromptContext")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("VoiceId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("WelcomeMessage")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("Agents");
-                });
 
             modelBuilder.Entity("backend.Models.ApiKey", b =>
                 {
@@ -86,44 +52,22 @@ namespace backend.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ApiKeys");
+                    b.ToTable("api_keys", "public");
                 });
 
-            modelBuilder.Entity("backend.Models.Tenant", b =>
+            modelBuilder.Entity("backend.Models.PhoneNumber", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SubscriptionPlan")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tenants");
-                });
-
-            modelBuilder.Entity("backend.Models.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid?>("AiAgentId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -134,24 +78,95 @@ namespace backend.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Users");
+                    b.ToTable("phone_numbers", "public");
                 });
 
-            modelBuilder.Entity("backend.Models.AiAgent", b =>
+            modelBuilder.Entity("backend.Models.SipAccount", b =>
                 {
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("Agents")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
-                    b.Navigation("Tenant");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Domain")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("sip_accounts", "public");
+                });
+
+            modelBuilder.Entity("backend.Models.Tenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SchemaName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tenants", "public");
+                });
+
+            modelBuilder.Entity("backend.Models.TenantDomain", b =>
+                {
+                    b.Property<string>("Hostname")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Hostname");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("tenant_domains", "public");
                 });
 
             modelBuilder.Entity("backend.Models.ApiKey", b =>
                 {
                     b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("ApiKeys")
+                        .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -159,10 +174,10 @@ namespace backend.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("backend.Models.User", b =>
+            modelBuilder.Entity("backend.Models.PhoneNumber", b =>
                 {
                     b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("Users")
+                        .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -170,13 +185,26 @@ namespace backend.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("backend.Models.Tenant", b =>
+            modelBuilder.Entity("backend.Models.SipAccount", b =>
                 {
-                    b.Navigation("Agents");
+                    b.HasOne("backend.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("ApiKeys");
+                    b.Navigation("Tenant");
+                });
 
-                    b.Navigation("Users");
+            modelBuilder.Entity("backend.Models.TenantDomain", b =>
+                {
+                    b.HasOne("backend.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
                 });
 #pragma warning restore 612, 618
         }

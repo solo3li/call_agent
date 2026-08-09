@@ -2,21 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend.Data;
 
 #nullable disable
 
-namespace backend.Migrations
+namespace backend.Migrations.Tenant
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260723101808_AddAiAgentAdvancedFeatures")]
-    partial class AddAiAgentAdvancedFeatures
+    [DbContext(typeof(TenantDbContext))]
+    partial class TenantDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,55 +31,19 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Dialect")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Emotion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FallbackNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ModelName")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("PromptContext")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Provider")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SpeakingStyle")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("TenantId")
+                    b.Property<Guid?>("PersonaId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("VoiceId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("WelcomeMessage")
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("PersonaId");
 
                     b.ToTable("Agents");
                 });
@@ -114,7 +75,83 @@ namespace backend.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ApiKeys");
+                    b.ToTable("api_keys", "public", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("backend.Models.CallAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Actions");
+                });
+
+            modelBuilder.Entity("backend.Models.CallActionLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CallActionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CallId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("InputJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OutputJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CallActionId");
+
+                    b.HasIndex("CallId");
+
+                    b.ToTable("ActionLogs");
                 });
 
             modelBuilder.Entity("backend.Models.CallRecord", b =>
@@ -156,6 +193,9 @@ namespace backend.Migrations
                     b.Property<string>("HangupCause")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("PersonaId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("RecordingUrl")
                         .HasColumnType("text");
 
@@ -172,9 +212,6 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Transcript")
                         .HasColumnType("text");
 
@@ -185,7 +222,7 @@ namespace backend.Migrations
 
                     b.HasIndex("AiAgentId");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("PersonaId");
 
                     b.ToTable("CallRecords");
                 });
@@ -215,14 +252,107 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
+                    b.HasKey("Id");
+
+                    b.ToTable("Contacts");
+                });
+
+            modelBuilder.Entity("backend.Models.KnowledgeBase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsProcessed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.ToTable("KnowledgeBases");
+                });
 
-                    b.ToTable("Contacts");
+            modelBuilder.Entity("backend.Models.Persona", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BehaviorRulesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("KnowledgeBaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PersonalityJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SystemPrompt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VoiceId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KnowledgeBaseId");
+
+                    b.ToTable("Personas");
                 });
 
             modelBuilder.Entity("backend.Models.PhoneNumber", b =>
@@ -250,7 +380,10 @@ namespace backend.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("PhoneNumbers");
+                    b.ToTable("phone_numbers", "public", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("backend.Models.SipAccount", b =>
@@ -281,7 +414,10 @@ namespace backend.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("SipAccounts");
+                    b.ToTable("sip_accounts", "public", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("backend.Models.Tenant", b =>
@@ -293,16 +429,52 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SubscriptionPlan")
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SchemaName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("tenants", "public", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("backend.Models.TenantDomain", b =>
+                {
+                    b.Property<string>("Hostname")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Hostname");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("tenant_domains", "public", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("backend.Models.User", b =>
@@ -332,12 +504,7 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
 
                     b.ToTable("Users");
                 });
@@ -368,57 +535,21 @@ namespace backend.Migrations
                     b.Property<string>("SigningSecret")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
 
                     b.ToTable("Webhooks");
                 });
 
             modelBuilder.Entity("backend.Models.AiAgent", b =>
                 {
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("Agents")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("backend.Models.Persona", "Persona")
+                        .WithMany()
+                        .HasForeignKey("PersonaId");
 
-                    b.Navigation("Tenant");
+                    b.Navigation("Persona");
                 });
 
             modelBuilder.Entity("backend.Models.ApiKey", b =>
-                {
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("ApiKeys")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("backend.Models.CallRecord", b =>
-                {
-                    b.HasOne("backend.Models.AiAgent", "AiAgent")
-                        .WithMany("CallRecords")
-                        .HasForeignKey("AiAgentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("CallRecords")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AiAgent");
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("backend.Models.Contact", b =>
                 {
                     b.HasOne("backend.Models.Tenant", "Tenant")
                         .WithMany()
@@ -429,20 +560,61 @@ namespace backend.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("backend.Models.PhoneNumber", b =>
+            modelBuilder.Entity("backend.Models.CallActionLog", b =>
                 {
-                    b.HasOne("backend.Models.AiAgent", "AiAgent")
-                        .WithMany("PhoneNumbers")
-                        .HasForeignKey("AiAgentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("PhoneNumbers")
-                        .HasForeignKey("TenantId")
+                    b.HasOne("backend.Models.CallAction", "CallAction")
+                        .WithMany()
+                        .HasForeignKey("CallActionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("backend.Models.CallRecord", "Call")
+                        .WithMany()
+                        .HasForeignKey("CallId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Call");
+
+                    b.Navigation("CallAction");
+                });
+
+            modelBuilder.Entity("backend.Models.CallRecord", b =>
+                {
+                    b.HasOne("backend.Models.AiAgent", "AiAgent")
+                        .WithMany("CallRecords")
+                        .HasForeignKey("AiAgentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("backend.Models.Persona", "Persona")
+                        .WithMany()
+                        .HasForeignKey("PersonaId");
+
                     b.Navigation("AiAgent");
+
+                    b.Navigation("Persona");
+                });
+
+            modelBuilder.Entity("backend.Models.Persona", b =>
+                {
+                    b.HasOne("backend.Models.KnowledgeBase", "KnowledgeBase")
+                        .WithMany()
+                        .HasForeignKey("KnowledgeBaseId");
+
+                    b.Navigation("KnowledgeBase");
+                });
+
+            modelBuilder.Entity("backend.Models.PhoneNumber", b =>
+                {
+                    b.HasOne("backend.Models.AiAgent", null)
+                        .WithMany("PhoneNumbers")
+                        .HasForeignKey("AiAgentId");
+
+                    b.HasOne("backend.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Tenant");
                 });
@@ -450,7 +622,7 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Models.SipAccount", b =>
                 {
                     b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("SipAccounts")
+                        .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -458,21 +630,10 @@ namespace backend.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("backend.Models.User", b =>
+            modelBuilder.Entity("backend.Models.TenantDomain", b =>
                 {
                     b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("Users")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("backend.Models.Webhook", b =>
-                {
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany("Webhooks")
+                        .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -485,23 +646,6 @@ namespace backend.Migrations
                     b.Navigation("CallRecords");
 
                     b.Navigation("PhoneNumbers");
-                });
-
-            modelBuilder.Entity("backend.Models.Tenant", b =>
-                {
-                    b.Navigation("Agents");
-
-                    b.Navigation("ApiKeys");
-
-                    b.Navigation("CallRecords");
-
-                    b.Navigation("PhoneNumbers");
-
-                    b.Navigation("SipAccounts");
-
-                    b.Navigation("Users");
-
-                    b.Navigation("Webhooks");
                 });
 #pragma warning restore 612, 618
         }

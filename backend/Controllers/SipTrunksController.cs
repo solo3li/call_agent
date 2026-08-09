@@ -20,10 +20,6 @@ namespace backend.Controllers
         [HttpPost]
         public ActionResult CreateSipTrunk([FromBody] CreateSipTrunkRequestDto request)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId))
-                return Unauthorized();
-
             // Here we would use LiveKit Server SDK to create a SIP Trunk profile dynamically
             // and save to our database.
             

@@ -11,11 +11,7 @@ namespace backend.Models
         [JsonIgnore]
         public string PasswordHash { get; set; } = string.Empty;
         
-        public Guid TenantId { get; set; }
-        
-        [JsonIgnore]
-        public Tenant? Tenant { get; set; }
-        
+
         // User Settings
         public bool DndStatus { get; set; } = false;
         public bool ForwardingEnabled { get; set; } = false;
