@@ -1,10 +1,12 @@
 ---
 # ══════════════════════════════════════════
-# NAMESPACE
+# NAMESPACE — skip if already exists
 # ══════════════════════════════════════════
+{{- if .Values.createNamespace | default false }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Values.namespace }}
   labels:
     {{- include "cpaas.labels" . | nindent 4 }}
+{{- end }}

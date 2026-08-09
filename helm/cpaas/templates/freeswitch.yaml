@@ -21,9 +21,6 @@ spec:
       labels:
         app: cpaas-freeswitch
     spec:
-      # hostNetwork needed for SIP/RTP to work with real IPs
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: freeswitch
           image: {{ .Values.freeswitch.image }}
@@ -74,16 +71,17 @@ metadata:
 spec:
   selector:
     app: cpaas-freeswitch
-  # ClusterIP only — hostNetwork handles external exposure
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: sip-ext-udp
       port: 5080
       targetPort: 5080
+      nodePort: 30080
       protocol: UDP
     - name: sip-ext-tcp
       port: 5080
       targetPort: 5080
+      nodePort: 30080
       protocol: TCP
     - name: esl
       port: 8021
