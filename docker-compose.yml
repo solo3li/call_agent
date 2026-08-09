@@ -235,7 +235,7 @@ services:
       LIVEKIT_URL: ws://livekit:7880
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
-      AI_API_KEY: ${GEMINI_API_KEY}
+      AI_API_KEY: ${Google__ApiKey:-AQ.Ab8RN6IcYXc8ArNRAhWiYfv3IFBW1-3FfFDSXSk1Ld3eVkNDiA}
       FREESWITCH_ESL_HOST: freeswitch:8021
       FREESWITCH_ESL_PASS: ${ESL_PASSWORD:-esl_dev_password}
       BACKEND_API_URL: http://backend:8080
