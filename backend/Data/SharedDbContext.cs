@@ -12,7 +12,6 @@ namespace backend.Data
         
         // Expose shared tables for migrations
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
-        public DbSet<SipAccount> SipAccounts { get; set; }
         public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<MarketplacePersona> MarketplacePersonas { get; set; }
 

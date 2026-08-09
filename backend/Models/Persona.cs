@@ -22,7 +22,7 @@ namespace backend.Models
         public string BehaviorRulesJson { get; set; } = "[]";
         
         public Guid? KnowledgeBaseId { get; set; }
-        public KnowledgeBase KnowledgeBase { get; set; }
+        public KnowledgeBase? KnowledgeBase { get; set; }
         
         public bool IsActive { get; set; } = true;
         public int Version { get; set; } = 1;

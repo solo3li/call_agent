@@ -33,14 +33,21 @@ export default function DemoPage() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-3 gap-8">
         <div>
           <h2 className="text-xl font-bold mb-4">Embedded Mode</h2>
-          <div className="border border-gray-300 rounded shadow-sm w-[400px]">
+          <div className="border border-gray-300 rounded shadow-sm w-full">
             <CpaasPanel apiKey="test-key" mode="embedded" theme={customTheme} />
           </div>
         </div>
         
+        <div>
+          <h2 className="text-xl font-bold mb-4">Agent UI (Screen Pop)</h2>
+          <div className="border border-gray-300 rounded shadow-sm w-full h-[400px]">
+            <CpaasPanel apiKey="test-key" mode="agent" agentExtension="101" theme={customTheme} />
+          </div>
+        </div>
+
         <div>
           <h2 className="text-xl font-bold mb-4">Floating Mode (Default)</h2>
           <p className="text-sm text-gray-500 mb-4">Check the bottom right corner of this page to see the floating widget bubble.</p>

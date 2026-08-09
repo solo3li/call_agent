@@ -26,6 +26,7 @@ namespace backend.Data
         public DbSet<KnowledgeBase> KnowledgeBases { get; set; }
         public DbSet<CallAction> Actions { get; set; }
         public DbSet<CallActionLog> ActionLogs { get; set; }
+        public DbSet<SipAccount> SipAccounts { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -54,7 +55,6 @@ namespace backend.Data
             // Exclude shared tables from Tenant migrations since they are managed by SharedDbContext
             modelBuilder.Entity<Tenant>().ToTable("tenants", "public", t => t.ExcludeFromMigrations());
             modelBuilder.Entity<PhoneNumber>().ToTable("phone_numbers", "public", t => t.ExcludeFromMigrations());
-            modelBuilder.Entity<SipAccount>().ToTable("sip_accounts", "public", t => t.ExcludeFromMigrations());
             modelBuilder.Entity<ApiKey>().ToTable("api_keys", "public", t => t.ExcludeFromMigrations());
             modelBuilder.Entity<TenantDomain>().ToTable("tenant_domains", "public", t => t.ExcludeFromMigrations());
 

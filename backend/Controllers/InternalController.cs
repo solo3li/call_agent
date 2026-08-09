@@ -154,6 +154,26 @@ namespace backend.Controllers
             return Ok(new { status = "agent_started", roomName = request.RoomName });
         }
 
+        [HttpPost("action-log")]
+        public async Task<IActionResult> LogAction([FromBody] ActionLogDto dto)
+        {
+            var logEntry = new CallActionLog
+            {
+                CallRecordId = dto.call_id,
+                ActionName = dto.action_name,
+                InputJson = System.Text.Json.JsonSerializer.Serialize(dto.parameters),
+                OutputJson = dto.result != null ? System.Text.Json.JsonSerializer.Serialize(dto.result) : "{}",
+                DurationMs = dto.duration_ms,
+                Success = dto.success,
+                CreatedAt = dto.timestamp
+            };
+
+            _tenantDb.ActionLogs.Add(logEntry);
+            await _tenantDb.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpPost("cdr")]
         public async Task<ActionResult> ReceiveCDR([FromBody] CDRDto cdr)
         {
@@ -263,6 +283,63 @@ namespace backend.Controllers
             return Ok(new { status = "ok", service = "cpaas-backend", timestamp = DateTime.UtcNow });
         }
 
+        [HttpGet("fs-config")]
+        [Produces("application/xml")]
+        public async Task<IActionResult> GetFreeSwitchConfig([FromQuery] string section, [FromQuery] string user, [FromQuery] string domain)
+        {
+            if (section == "directory")
+            {
+                if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(domain))
+                    return NotFound();
+
+                // Resolve domain to tenant
+                var tenantDomain = await _sharedDb.TenantDomains.FirstOrDefaultAsync(td => td.Hostname == domain);
+                if (tenantDomain == null)
+                    return NotFound();
+
+                if (!await SwitchToTenantSchema(tenantDomain.TenantId))
+                    return NotFound();
+
+                var sipAccount = await _tenantDb.SipAccounts.FirstOrDefaultAsync(sa => sa.Extension == user);
+                if (sipAccount == null)
+                    return NotFound();
+
+                var xmlTemplate = @"
+<document type=""freeswitch/xml"">
+  <section name=""directory"">
+    <domain name=""{DOMAIN}"">
+      <params>
+        <param name=""dial-string"" value=""{presence_id=${dialed_user}@${dialed_domain}}${sofia_contact(${dialed_user}@${dialed_domain})}""/>
+      </params>
+      <groups>
+        <group name=""default"">
+          <users>
+            <user id=""{USER}"">
+              <params>
+                <param name=""password"" value=""{PASSWORD}""/>
+              </params>
+              <variables>
+                <variable name=""user_context"" value=""cpaas_inbound""/>
+              </variables>
+            </user>
+          </users>
+        </group>
+      </groups>
+    </domain>
+  </section>
+</document>";
+
+                var xml = xmlTemplate
+                    .Replace("{DOMAIN}", domain)
+                    .Replace("{USER}", sipAccount.Extension)
+                    .Replace("{PASSWORD}", sipAccount.PasswordEnc);
+
+                return Content(xml, "application/xml");
+            }
+            
+            return NotFound();
+        }
+
         private async Task<string> GetCallerContext(string? callerNumber)
         {
             if (string.IsNullOrEmpty(callerNumber)) return "unknown";
@@ -328,5 +405,16 @@ namespace backend.Controllers
         public string TenantId { get; set; } = string.Empty;
         public string Action { get; set; } = string.Empty;
         public Dictionary<string, object>? Params { get; set; }
+    }
+
+    public class ActionLogDto
+    {
+        public Guid call_id { get; set; }
+        public string action_name { get; set; } = string.Empty;
+        public Dictionary<string, object>? parameters { get; set; }
+        public object? result { get; set; }
+        public int duration_ms { get; set; }
+        public bool success { get; set; }
+        public DateTime timestamp { get; set; }
     }
 }

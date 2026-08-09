@@ -11,14 +11,33 @@ export const metadata: Metadata = {
   description: "Developer Console for Voice AI CPaaS",
 };
 
-export default function RootLayout({
+import { headers } from "next/headers";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Simulate Next.js Middleware injecting Tenant Branding based on Subdomain
+  const headersList = await headers();
+  const brandJson = headersList.get("x-tenant-brand");
+  
+  let customStyle = {};
+  if (brandJson) {
+    try {
+      const brand = JSON.parse(brandJson);
+      customStyle = {
+        '--brand-primary': brand.primary_color,
+        '--cpaas-primary': brand.primary_color,
+      };
+    } catch (e) {
+      // ignore parse errors
+    }
+  }
+
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className} style={customStyle}>
         <AdminLayout>
             {children}
         </AdminLayout>

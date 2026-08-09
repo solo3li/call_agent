@@ -16,9 +16,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class SipAccountsController : ControllerBase
     {
-        private readonly SharedDbContext _context;
+        private readonly TenantDbContext _context;
 
-        public SipAccountsController(SharedDbContext context)
+        public SipAccountsController(TenantDbContext context)
         {
             _context = context;
         }
@@ -26,11 +26,7 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SipAccount>>> GetSipAccounts()
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
-
             var accounts = await _context.SipAccounts
-                .Where(s => s.TenantId == tenantId)
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
 
@@ -40,20 +36,23 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<SipAccount>> CreateSipAccount()
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
+            var userIdStr = User.FindFirstValue("UserId");
+            if (!Guid.TryParse(userIdStr, out var userId)) 
+            {
+                // Fallback or handle appropriately, for now we mock
+                userId = Guid.NewGuid();
+            }
 
             var random = new Random();
-            var username = "ext" + random.Next(1000, 9999).ToString();
+            var extension = "1" + random.Next(100, 999).ToString();
             var password = Guid.NewGuid().ToString("N").Substring(0, 12);
-            var domain = "cpaas.178.62.192.74.nip.io";
 
             var sipAccount = new SipAccount
             {
-                TenantId = tenantId,
-                Username = username,
-                Password = password,
-                Domain = domain
+                UserId = userId,
+                Extension = extension,
+                PasswordEnc = password,
+                Type = "agent"
             };
 
             _context.SipAccounts.Add(sipAccount);
@@ -65,10 +64,7 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSipAccount(Guid id)
         {
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            if (!Guid.TryParse(tenantIdStr, out var tenantId)) return Unauthorized();
-
-            var sipAccount = await _context.SipAccounts.FirstOrDefaultAsync(s => s.Id == id && s.TenantId == tenantId);
+            var sipAccount = await _context.SipAccounts.FirstOrDefaultAsync(s => s.Id == id);
             if (sipAccount == null)
                 return NotFound();
 

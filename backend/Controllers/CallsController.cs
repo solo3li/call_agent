@@ -78,9 +78,9 @@ namespace backend.Controllers
             var call = await _context.CallRecords.FindAsync(id);
             if (call == null) return NotFound();
 
-            var actionLogs = await _context.CallActionLogs
+            var actionLogs = await _context.ActionLogs
                 .Where(log => log.CallRecordId == id)
-                .OrderBy(log => log.Timestamp)
+                .OrderBy(log => log.CreatedAt)
                 .ToListAsync();
 
             var timeline = new List<object>();
@@ -90,11 +90,11 @@ namespace backend.Controllers
             {
                 timeline.Add(new { 
                     type = "action", 
-                    time = log.Timestamp, 
+                    time = log.CreatedAt, 
                     data = new { 
                         action = log.ActionName, 
-                        params_json = log.ParamsJson, 
-                        result_json = log.ResultJson, 
+                        params_json = log.InputJson, 
+                        result_json = log.OutputJson, 
                         duration_ms = log.DurationMs, 
                         success = log.Success 
                     } 
