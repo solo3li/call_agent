@@ -102,9 +102,11 @@ namespace backend.Controllers
             var httpClient = _httpClientFactory.CreateClient();
             var content = new StringContent(JsonSerializer.Serialize(workerPayload), Encoding.UTF8, "application/json");
             
+            var workerUrl = _configuration["GO_AGENT_URL"] ?? "http://127.0.0.1:8080";
+            var workerEndpoint = $"{workerUrl.TrimEnd('/')}/worker/join";
             try 
             {
-                var response = await httpClient.PostAsync("http://127.0.0.1:8080/worker/join", content);
+                var response = await httpClient.PostAsync(workerEndpoint, content);
                 if (!response.IsSuccessStatusCode)
                 {
                     return StatusCode(500, "Failed to start AI Agent session.");

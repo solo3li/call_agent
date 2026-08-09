@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,6 +27,7 @@ import (
 // ESLClient represents a connection to FreeSWITCH ESL
 type ESLClient struct {
 	conn     net.Conn
+	reader   *bufio.Reader
 	mu       sync.Mutex
 	password string
 	host     string
@@ -46,6 +50,7 @@ func NewESLClient(host, password string) (*ESLClient, error) {
 
 	client := &ESLClient{
 		conn:     conn,
+		reader:   bufio.NewReader(conn),
 		password: password,
 		host:     host,
 	}
@@ -80,9 +85,37 @@ func (e *ESLClient) send(cmd string) {
 }
 
 func (e *ESLClient) readResponse() string {
-	buf := make([]byte, 4096)
-	n, _ := e.conn.Read(buf)
-	return string(buf[:n])
+	var headers bytes.Buffer
+	var contentLength int
+
+	for {
+		line, err := e.reader.ReadString('\n')
+		if err != nil {
+			return headers.String()
+		}
+		headers.WriteString(line)
+		
+		if line == "\n" {
+			break
+		}
+
+		if strings.HasPrefix(strings.ToLower(line), "content-length:") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				contentLength, _ = strconv.Atoi(strings.TrimSpace(parts[1]))
+			}
+		}
+	}
+
+	if contentLength > 0 {
+		body := make([]byte, contentLength)
+		_, err := io.ReadFull(e.reader, body)
+		if err == nil {
+			headers.Write(body)
+		}
+	}
+
+	return headers.String()
 }
 
 // ExecuteAPI executes a FreeSWITCH API command
@@ -152,29 +185,43 @@ func ReportCDR(backendURL string, cdr CDRReport) {
 		return
 	}
 
-	req, err := http.NewRequestWithContext(
-		context.Background(),
-		"POST",
-		backendURL+"/api/internal/cdr",
-		bytes.NewReader(data),
-	)
-	if err != nil {
-		log.Printf("CDR: Failed to create request: %v", err)
-		return
+	maxRetries := 3
+	for i := 0; i < maxRetries; i++ {
+		req, err := http.NewRequestWithContext(
+			context.Background(),
+			"POST",
+			backendURL+"/api/internal/cdr",
+			bytes.NewReader(data),
+		)
+		if err != nil {
+			log.Printf("CDR: Failed to create request: %v", err)
+			return
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Internal-Key", os.Getenv("INTERNAL_API_KEY"))
+
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				log.Printf("CDR: Reported for call %s (status: %d)", cdr.FreeSwitchUUID, resp.StatusCode)
+				return
+			}
+			log.Printf("CDR: Report failed with status %d (Attempt %d/%d)", resp.StatusCode, i+1, maxRetries)
+		} else {
+			log.Printf("CDR: Failed to send CDR: %v (Attempt %d/%d)", err, i+1, maxRetries)
+		}
+
+		if i < maxRetries-1 {
+			time.Sleep(time.Duration(1<<i) * time.Second)
+			// Reset reader for next attempt
+			data, _ = json.Marshal(cdr)
+		}
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Internal-Key", os.Getenv("INTERNAL_API_KEY"))
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("CDR: Failed to send CDR: %v", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	log.Printf("CDR: Reported for call %s (status: %d)", cdr.FreeSwitchUUID, resp.StatusCode)
+	log.Printf("CDR: Exhausted all retries for call %s. Data lost.", cdr.FreeSwitchUUID)
 }
 
 // ===========================================================

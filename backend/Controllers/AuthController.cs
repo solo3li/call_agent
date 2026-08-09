@@ -77,8 +77,7 @@ namespace backend.Controllers
             var jwtKey = _configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
             {
-                // Fallback hardcoded key for dev if missing
-                jwtKey = "super_secret_fallback_key_that_is_at_least_32_bytes_long"; 
+                throw new InvalidOperationException("Jwt:Key is missing or too short. A secure 32+ byte key must be configured.");
             }
             
             var key = Encoding.ASCII.GetBytes(jwtKey);

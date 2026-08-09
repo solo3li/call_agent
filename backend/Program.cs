@@ -19,11 +19,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure CORS
+var allowedOriginsStr = builder.Configuration["ALLOWED_ORIGINS"];
+var allowedOrigins = string.IsNullOrEmpty(allowedOriginsStr) 
+    ? new[] { "http://localhost:3000" } 
+    : allowedOriginsStr.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 

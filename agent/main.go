@@ -41,6 +41,44 @@ func injectContext(prompt string, metadata map[string]string) string {
 	return prompt
 }
 
+type TokenBucket struct {
+	rate       float64
+	capacity   float64
+	tokens     float64
+	lastUpdate time.Time
+	mu         sync.Mutex
+}
+
+func NewTokenBucket(rate float64, capacity float64) *TokenBucket {
+	return &TokenBucket{
+		rate:       rate,
+		capacity:   capacity,
+		tokens:     capacity,
+		lastUpdate: time.Now(),
+	}
+}
+
+func (tb *TokenBucket) Allow() bool {
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+
+	now := time.Now()
+	elapsed := now.Sub(tb.lastUpdate).Seconds()
+	tb.tokens += elapsed * tb.rate
+	if tb.tokens > tb.capacity {
+		tb.tokens = tb.capacity
+	}
+	tb.lastUpdate = now
+
+	if tb.tokens >= 1.0 {
+		tb.tokens -= 1.0
+		return true
+	}
+	return false
+}
+
+var joinLimiter = NewTokenBucket(100.0/60.0, 100) // 100 requests per minute
+
 func main() {
 	lkUrl := os.Getenv("LIVEKIT_URL")
 	lkKey := os.Getenv("LIVEKIT_API_KEY")
@@ -65,6 +103,11 @@ func main() {
 	http.HandleFunc("/worker/join", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !joinLimiter.Allow() {
+			http.Error(w, "Too many requests", http.StatusTooManyRequests)
 			return
 		}
 
