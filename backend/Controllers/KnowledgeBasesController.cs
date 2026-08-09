@@ -43,6 +43,25 @@ namespace backend.Controllers
             return CreatedAtAction(nameof(GetKnowledgeBase), new { id = knowledgeBase.Id }, knowledgeBase);
         }
 
+        [HttpPost("upload")]
+        public async Task<ActionResult<KnowledgeBase>> UploadKnowledgeBase([FromForm] string name, [FromForm] string sourceType, [FromForm] string? sourceUrl)
+        {
+            // Mock file/URL extraction logic for RAG
+            // In reality, this would upload to an LLM provider or process PDF to VectorDB
+            var kb = new KnowledgeBase 
+            {
+                Name = name,
+                SourceType = sourceType,
+                SourceUrl = sourceUrl ?? string.Empty,
+                Description = $"Processed {sourceType} data",
+                IsProcessed = true // Simulate immediate processing
+            };
+            
+            _context.KnowledgeBases.Add(kb);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetKnowledgeBase), new { id = kb.Id }, kb);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteKnowledgeBase(Guid id)
         {

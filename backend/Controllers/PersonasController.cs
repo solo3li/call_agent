@@ -27,6 +27,46 @@ namespace backend.Controllers
             return await _context.Personas.Include(p => p.KnowledgeBase).ToListAsync();
         }
 
+        [HttpGet("templates")]
+        [AllowAnonymous]
+        public ActionResult<IEnumerable<object>> GetTemplates()
+        {
+            // Mocking the marketplace templates
+            return Ok(new[]
+            {
+                new { 
+                    id = "template-1", 
+                    name = "Medical Receptionist", 
+                    category = "Healthcare", 
+                    price = "Free", 
+                    description = "Handles appointment scheduling and basic triage questions.",
+                    avatar = "https://via.placeholder.com/150",
+                    systemPrompt = "You are a professional medical receptionist...",
+                    voiceId = "Nova"
+                },
+                new { 
+                    id = "template-2", 
+                    name = "Tech Support Tier 1", 
+                    category = "IT", 
+                    price = "$5/mo", 
+                    description = "Troubleshoots common internet and hardware issues.",
+                    avatar = "https://via.placeholder.com/150",
+                    systemPrompt = "You are an analytical tech support agent...",
+                    voiceId = "Onyx"
+                },
+                new { 
+                    id = "template-3", 
+                    name = "Real Estate Assistant", 
+                    category = "Sales", 
+                    price = "Free", 
+                    description = "Qualifies leads and provides property details.",
+                    avatar = "https://via.placeholder.com/150",
+                    systemPrompt = "You are a persuasive real estate agent...",
+                    voiceId = "Alloy"
+                }
+            });
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Persona>> GetPersona(Guid id)
         {

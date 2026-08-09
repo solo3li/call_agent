@@ -24,18 +24,69 @@ export default function NewPersonaPage() {
     voiceId: 'Nova',
     systemPrompt: '',
     language: 'ar',
-    isActive: true
+    isActive: true,
+    tone: 'professional',
+    speed: 'normal',
+    enthusiasm: 'medium',
+    knowledgeBaseFile: null as File | null,
+    knowledgeBaseUrl: ''
   });
 
-  const handleChange = (field: string, value: string | boolean) => {
+  const handleChange = (field: string, value: string | boolean | File | null) => {
     setFormData({ ...formData, [field]: value });
   };
 
   const handleSave = async () => {
-    // In a real app, POST to /api/personas
-    console.log("Saving persona:", formData);
-    alert("Persona Created!");
-    router.push('/personas');
+    let knowledgeBaseId = null;
+
+    if (formData.knowledgeBaseFile || formData.knowledgeBaseUrl) {
+      const kbData = new FormData();
+      kbData.append('name', formData.name + ' KB');
+      kbData.append('sourceType', formData.knowledgeBaseFile ? 'pdf' : 'website');
+      if (formData.knowledgeBaseUrl) kbData.append('sourceUrl', formData.knowledgeBaseUrl);
+      
+      const kbRes = await fetch('http://localhost:5000/api/knowledgebases/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `ApiKey ${localStorage.getItem('token')}` },
+        body: kbData
+      });
+      if (kbRes.ok) {
+        const kb = await kbRes.json();
+        knowledgeBaseId = kb.id;
+      }
+    }
+
+    const payload = {
+      name: formData.name,
+      provider: formData.provider,
+      modelName: formData.modelName,
+      voiceId: formData.voiceId,
+      systemPrompt: formData.systemPrompt,
+      language: formData.language,
+      isActive: formData.isActive,
+      knowledgeBaseId: knowledgeBaseId,
+      personalityJson: JSON.stringify({
+        tone: formData.tone,
+        speed: formData.speed,
+        enthusiasm: formData.enthusiasm
+      })
+    };
+
+    const res = await fetch('http://localhost:5000/api/personas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `ApiKey ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      alert("Persona Created!");
+      router.push('/personas');
+    } else {
+      alert("Failed to create persona.");
+    }
   };
 
   return (
@@ -107,16 +158,75 @@ export default function NewPersonaPage() {
         </FormGroup>
 
         <FormGroup legendText="Voice & Personality">
-          <Select 
-            id="voiceId" 
-            labelText="Voice ID (ElevenLabs / Picsart)" 
-            value={formData.voiceId}
-            onChange={(e) => handleChange('voiceId', e.target.value)}
-          >
-            <SelectItem value="Nova" text="Nova (Female, Professional)" />
-            <SelectItem value="Alloy" text="Alloy (Neutral, Friendly)" />
-            <SelectItem value="Onyx" text="Onyx (Male, Deep)" />
-          </Select>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <Select 
+              id="voiceId" 
+              labelText="Voice ID (ElevenLabs / Picsart)" 
+              value={formData.voiceId}
+              onChange={(e) => handleChange('voiceId', e.target.value)}
+            >
+              <SelectItem value="Nova" text="Nova (Female, Professional)" />
+              <SelectItem value="Alloy" text="Alloy (Neutral, Friendly)" />
+              <SelectItem value="Onyx" text="Onyx (Male, Deep)" />
+            </Select>
+            <Select 
+              id="tone" 
+              labelText="Tone" 
+              value={formData.tone}
+              onChange={(e) => handleChange('tone', e.target.value)}
+            >
+              <SelectItem value="professional" text="Professional" />
+              <SelectItem value="casual" text="Casual" />
+              <SelectItem value="empathetic" text="Empathetic" />
+              <SelectItem value="aggressive" text="Aggressive (Sales)" />
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Select 
+              id="speed" 
+              labelText="Speaking Speed" 
+              value={formData.speed}
+              onChange={(e) => handleChange('speed', e.target.value)}
+            >
+              <SelectItem value="slow" text="Slow" />
+              <SelectItem value="normal" text="Normal" />
+              <SelectItem value="fast" text="Fast" />
+            </Select>
+            <Select 
+              id="enthusiasm" 
+              labelText="Enthusiasm Level" 
+              value={formData.enthusiasm}
+              onChange={(e) => handleChange('enthusiasm', e.target.value)}
+            >
+              <SelectItem value="low" text="Low (Calm)" />
+              <SelectItem value="medium" text="Medium (Balanced)" />
+              <SelectItem value="high" text="High (Energetic)" />
+            </Select>
+          </div>
+        </FormGroup>
+
+        <FormGroup legendText="Knowledge Base (RAG Integration)">
+          <div className="text-sm text-gray-600 mb-4">
+            Provide a document or website for the AI to extract knowledge from. This context will be injected automatically during calls.
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <TextInput 
+              id="knowledgeBaseUrl" 
+              labelText="Website URL" 
+              placeholder="https://example.com/faq"
+              value={formData.knowledgeBaseUrl}
+              onChange={(e) => handleChange('knowledgeBaseUrl', e.target.value)}
+            />
+            <div className="cds--form-item">
+              <label className="cds--label">Upload PDF Document</label>
+              <input 
+                type="file" 
+                accept=".pdf"
+                className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-[var(--cds-button-primary)] file:text-white hover:file:bg-[var(--cds-button-primary-hover)] cursor-pointer"
+                onChange={(e) => handleChange('knowledgeBaseFile', e.target.files ? e.target.files[0] : null)}
+              />
+            </div>
+          </div>
         </FormGroup>
         
         <FormGroup legendText="Status">

@@ -1,26 +1,67 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button
+  Button,
+  Loading
 } from '@carbon/react';
 import { Copy } from '@carbon/icons-react';
-import Link from 'next/link';
-import Image from 'next/image';
-
-const templates = [
-  { id: '1', name: 'Medical Receptionist', category: 'Healthcare', price: 'Free', description: 'Handles appointment scheduling and basic triage questions.', avatar: 'https://via.placeholder.com/150' },
-  { id: '2', name: 'Tech Support Tier 1', category: 'IT', price: '$5/mo', description: 'Troubleshoots common internet and hardware issues.', avatar: 'https://via.placeholder.com/150' },
-  { id: '3', name: 'Real Estate Assistant', category: 'Sales', price: 'Free', description: 'Qualifies leads and provides property details.', avatar: 'https://via.placeholder.com/150' },
-];
+import { useRouter } from 'next/navigation';
 
 export default function MarketplacePage() {
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/personas/templates');
+        const data = await res.json();
+        setTemplates(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTemplates();
+  }, []);
   
-  const handleClone = (templateName: string) => {
-    alert(`Successfully cloned ${templateName} to your schema!`);
+  const handleClone = async (template: any) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/personas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `ApiKey ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          name: template.name + ' (Clone)',
+          avatarUrl: template.avatar,
+          description: template.description,
+          voiceId: template.voiceId,
+          language: 'en',
+          provider: 'google',
+          modelName: 'gemini-1.5-pro',
+          systemPrompt: template.systemPrompt,
+          isActive: true
+        })
+      });
+      if (res.ok) {
+        alert(`Successfully cloned ${template.name} to your workspace!`);
+        router.push('/personas');
+      } else {
+        alert('Failed to clone persona.');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
+
+  if (loading) return <Loading />;
 
   return (
     <div className="p-8">
@@ -51,7 +92,7 @@ export default function MarketplacePage() {
               
               <div className="flex justify-between items-center mt-auto pt-4 border-t border-[var(--cds-ui-03)]">
                 <span className="font-bold text-[var(--cds-text-01)]">{template.price}</span>
-                <Button size="sm" renderIcon={Copy} onClick={() => handleClone(template.name)}>Clone</Button>
+                <Button size="sm" renderIcon={Copy} onClick={() => handleClone(template)}>Clone</Button>
               </div>
             </div>
           </div>
