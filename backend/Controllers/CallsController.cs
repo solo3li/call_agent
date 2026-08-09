@@ -71,5 +71,42 @@ namespace backend.Controllers
 
             return Ok(calls);
         }
+
+        [HttpGet("{id}/timeline")]
+        public async Task<ActionResult<IEnumerable<object>>> GetCallTimeline(Guid id)
+        {
+            var call = await _context.CallRecords.FindAsync(id);
+            if (call == null) return NotFound();
+
+            var actionLogs = await _context.CallActionLogs
+                .Where(log => log.CallRecordId == id)
+                .OrderBy(log => log.Timestamp)
+                .ToListAsync();
+
+            var timeline = new List<object>();
+            timeline.Add(new { type = "started", time = call.StartTime, data = new { caller = call.CallerNumber } });
+
+            foreach (var log in actionLogs)
+            {
+                timeline.Add(new { 
+                    type = "action", 
+                    time = log.Timestamp, 
+                    data = new { 
+                        action = log.ActionName, 
+                        params_json = log.ParamsJson, 
+                        result_json = log.ResultJson, 
+                        duration_ms = log.DurationMs, 
+                        success = log.Success 
+                    } 
+                });
+            }
+
+            if (call.EndTime.HasValue)
+            {
+                timeline.Add(new { type = "ended", time = call.EndTime.Value, data = new { duration = call.DurationSeconds, cost = call.CostUsd } });
+            }
+
+            return Ok(timeline.OrderBy(t => ((dynamic)t).time));
+        }
     }
 }

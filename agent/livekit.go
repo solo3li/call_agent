@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
+	"fmt"
 
 	lksdk "github.com/livekit/server-sdk-go"
+	"github.com/livekit/protocol/livekit"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 )
@@ -64,6 +67,26 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 	}
 
 	log.Printf("AI Agent successfully joined LiveKit room: %s", roomName)
+
+	// Start Egress Recording
+	go func() {
+		egressClient := lksdk.NewEgressClient(url, apiKey, apiSecret)
+		req := &livekit.RoomCompositeEgressRequest{
+			RoomName: roomName,
+			FileOutputs: []*livekit.EncodedFileOutput{
+				{
+					FileType: livekit.EncodedFileType_MP4,
+					Filepath: fmt.Sprintf("recordings/%s.mp4", roomName),
+				},
+			},
+		}
+		info, err := egressClient.StartRoomCompositeEgress(context.Background(), req)
+		if err != nil {
+			log.Printf("Failed to start LiveKit Egress for room %s: %v", roomName, err)
+		} else {
+			log.Printf("Started LiveKit Egress recording: %s", info.EgressId)
+		}
+	}()
 
 	_, err = room.LocalParticipant.PublishTrack(outTrack, &lksdk.TrackPublicationOptions{
 		Name: "ai-response",

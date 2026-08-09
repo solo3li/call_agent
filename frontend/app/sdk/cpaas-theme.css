@@ -1,0 +1,184 @@
+/* Default CPaaS Panel Theme Variables */
+:root {
+  --cpaas-primary: #0f62fe;
+  --cpaas-primary-hover: #0353e9;
+  --cpaas-primary-text: #ffffff;
+  
+  --cpaas-bg: #ffffff;
+  --cpaas-surface: #f4f4f4;
+  
+  --cpaas-text: #161616;
+  --cpaas-text-muted: #525252;
+  
+  --cpaas-border: #e0e0e0;
+  
+  --cpaas-danger: #da1e28;
+  --cpaas-danger-hover: #ba1b23;
+  
+  --cpaas-radius: 8px;
+  --cpaas-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  --cpaas-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.cpaas-widget-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family: var(--cpaas-font);
+}
+
+.cpaas-fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--cpaas-primary);
+  border: none;
+  box-shadow: var(--cpaas-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.cpaas-fab:hover {
+  background-color: var(--cpaas-primary-hover);
+  transform: scale(1.05);
+}
+
+.cpaas-panel {
+  background-color: var(--cpaas-bg);
+  border: 1px solid var(--cpaas-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--cpaas-font);
+  color: var(--cpaas-text);
+}
+
+.cpaas-floating-panel {
+  width: 350px;
+  height: 500px;
+  border-radius: var(--cpaas-radius);
+  box-shadow: var(--cpaas-shadow);
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+}
+
+.cpaas-embedded-panel {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--cpaas-radius);
+  min-height: 400px;
+}
+
+.cpaas-header {
+  background-color: var(--cpaas-primary);
+  color: var(--cpaas-primary-text);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cpaas-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cpaas-icon-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cpaas-body {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cpaas-surface);
+}
+
+.cpaas-start-screen, .cpaas-call-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.cpaas-start-screen p {
+  margin-bottom: 24px;
+  color: var(--cpaas-text-muted);
+}
+
+.cpaas-btn {
+  border: none;
+  border-radius: var(--cpaas-radius);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.cpaas-btn-primary {
+  background-color: var(--cpaas-primary);
+  color: var(--cpaas-primary-text);
+}
+
+.cpaas-btn-primary:hover {
+  background-color: var(--cpaas-primary-hover);
+}
+
+.cpaas-btn-danger {
+  background-color: var(--cpaas-danger);
+  color: #fff;
+  margin-top: auto;
+}
+
+.cpaas-btn-danger:hover {
+  background-color: var(--cpaas-danger-hover);
+}
+
+.cpaas-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.pulsing {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(15, 98, 254, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0); }
+}
+
+.cpaas-timer {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 8px;
+}
