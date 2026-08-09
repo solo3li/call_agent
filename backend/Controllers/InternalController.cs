@@ -18,6 +18,7 @@ namespace backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<InternalController> _logger;
+        private readonly ILicenseService _licenseService;
 
         public InternalController(
             SharedDbContext sharedDb,
@@ -25,7 +26,8 @@ namespace backend.Controllers
             ITenantProvider tenantProvider,
             IConfiguration configuration,
             IHttpClientFactory httpClientFactory,
-            ILogger<InternalController> logger)
+            ILogger<InternalController> logger,
+            ILicenseService licenseService)
         {
             _sharedDb = sharedDb;
             _tenantDb = tenantDb;
@@ -33,6 +35,7 @@ namespace backend.Controllers
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _licenseService = licenseService;
         }
 
         private bool IsInternalRequest()
@@ -136,6 +139,14 @@ namespace backend.Controllers
             {
                 _logger.LogError(ex, "AgentJoin: Failed to reach Go Agent");
                 return StatusCode(502, new { error = "Go agent connection failed" });
+            }
+
+            // Check License Limits
+            var activeCalls = await _tenantDb.CallRecords.CountAsync(c => c.Status == "active");
+            if (!_licenseService.CheckCallLimit(activeCalls))
+            {
+                _logger.LogWarning("Call limit exceeded. Rejecting AgentJoin.");
+                return StatusCode(402, new { error = "Payment Required: Call limit exceeded per license" });
             }
 
             var callRecord = new CallRecord

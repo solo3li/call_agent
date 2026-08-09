@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: {{ .Values.backend.image }}
+        ports:
+        - containerPort: 5000
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.backend.env.ASPNETCORE_ENVIRONMENT }}
+        - name: DEPLOYMENT_MODE
+          value: {{ .Values.global.mode }}
+        - name: LICENSE_KEY
+          value: {{ .Values.backend.env.LICENSE_KEY | quote }}
+        - name: ConnectionStrings__DefaultConnection
+          value: "Host={{ .Values.postgres.host }};Database=cpaas;Username=postgres;Password={{ .Values.postgres.password }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 5000
+    targetPort: 5000

@@ -21,16 +21,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <ChartLine className="mr-3" /> Dashboard
               </Link>
             </li>
-            <li>
-              <Link href="/admin/tenants" className="flex items-center px-6 py-3 text-sm hover:bg-[#393939] transition-colors">
-                <UserMultiple className="mr-3" /> Tenants Management
-              </Link>
-            </li>
-            <li>
-              <Link href="/admin/impersonate" className="flex items-center px-6 py-3 text-sm hover:bg-[#393939] transition-colors text-[#4589ff]">
-                <Security className="mr-3" /> Impersonation & Auth
-              </Link>
-            </li>
+            
+            {process.env.NEXT_PUBLIC_DEPLOYMENT_MODE === 'single_tenant' ? (
+              <li>
+                <Link href="/admin/license" className="flex items-center px-6 py-3 text-sm hover:bg-[#393939] transition-colors text-[#24a148]">
+                  <Security className="mr-3" /> License & System Ops
+                </Link>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link href="/admin/tenants" className="flex items-center px-6 py-3 text-sm hover:bg-[#393939] transition-colors">
+                    <UserMultiple className="mr-3" /> Tenants Management
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin/impersonate" className="flex items-center px-6 py-3 text-sm hover:bg-[#393939] transition-colors text-[#4589ff]">
+                    <Security className="mr-3" /> Impersonation & Auth
+                  </Link>
+                </li>
+              </>
+            )}
+            
             <li>
               <Link href="/admin/settings" className="flex items-center px-6 py-3 text-sm hover:bg-[#393939] transition-colors">
                 <Settings className="mr-3" /> Global Settings

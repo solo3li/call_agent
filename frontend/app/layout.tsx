@@ -23,7 +23,7 @@ export default async function RootLayout({
   const brandJson = headersList.get("x-tenant-brand");
   
   let customStyle = {};
-  if (brandJson) {
+  if (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE !== "single_tenant" && brandJson) {
     try {
       const brand = JSON.parse(brandJson);
       customStyle = {

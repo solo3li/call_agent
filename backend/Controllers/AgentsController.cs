@@ -17,10 +17,12 @@ namespace backend.Controllers
     public class AgentsController : ControllerBase
     {
         private readonly TenantDbContext _context;
+        private readonly backend.Services.ILicenseService _licenseService;
 
-        public AgentsController(TenantDbContext context)
+        public AgentsController(TenantDbContext context, backend.Services.ILicenseService licenseService)
         {
             _context = context;
+            _licenseService = licenseService;
         }
 
         [HttpGet]
@@ -32,6 +34,11 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<AiAgent>> CreateAgent(AiAgent agent)
         {
+            var agentCount = await _context.Agents.CountAsync();
+            if (!_licenseService.CheckAgentLimit(agentCount))
+            {
+                return StatusCode(402, new { error = "Payment Required: Agent limit exceeded per license" });
+            }
             _context.Agents.Add(agent);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAgents), new { id = agent.Id }, agent);

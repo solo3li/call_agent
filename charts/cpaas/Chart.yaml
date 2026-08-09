@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cpaas
+description: Enterprise CPaaS Platform (Single-Tenant On-Premises)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

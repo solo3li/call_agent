@@ -17,10 +17,12 @@ namespace backend.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, SharedDbContext sharedDb, ITenantProvider tenantProvider)
+        public async Task InvokeAsync(HttpContext context, SharedDbContext sharedDb, ITenantProvider tenantProvider, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
+            var isSingleTenant = configuration["DEPLOYMENT_MODE"] == "single_tenant";
+
             // 1. Check for TenantInfo from JWT claims first (for API calls)
-            if (context.User.Identity?.IsAuthenticated == true)
+            if (context.User.Identity?.IsAuthenticated == true && !isSingleTenant)
             {
                 var schemaClaim = context.User.FindFirst("TenantSchema")?.Value;
                 var tenantIdClaim = context.User.FindFirst("TenantId")?.Value;
@@ -31,6 +33,17 @@ namespace backend.Middleware
                     await _next(context);
                     return;
                 }
+            }
+
+            if (isSingleTenant)
+            {
+                var defaultTenant = await sharedDb.Tenants.OrderBy(t => t.CreatedAt).FirstOrDefaultAsync();
+                if (defaultTenant != null)
+                {
+                    tenantProvider.SetTenantInfo(defaultTenant.SchemaName, defaultTenant.Id);
+                }
+                await _next(context);
+                return;
             }
 
             // 2. Fallback to Host header (for login / domain-based resolution)
@@ -48,7 +61,7 @@ namespace backend.Middleware
             {
                 // Fallback for local development or default routing
                 // In production, you might want to return 404 or redirect to a default landing page
-                var defaultTenant = await sharedDb.Tenants.FirstOrDefaultAsync();
+                var defaultTenant = await sharedDb.Tenants.OrderBy(t => t.CreatedAt).FirstOrDefaultAsync();
                 if (defaultTenant != null)
                 {
                     tenantProvider.SetTenantInfo(defaultTenant.SchemaName, defaultTenant.Id);

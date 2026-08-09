@@ -48,6 +48,7 @@ builder.Services.AddDbContext<SharedDbContext>(options =>
 builder.Services.AddDbContext<TenantDbContext>();
 
 builder.Services.AddScoped<backend.Services.ITenantProvider, backend.Services.TenantProvider>();
+builder.Services.AddSingleton<backend.Services.ILicenseService, backend.Services.LicenseService>();
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_fallback_key_that_is_at_least_32_bytes_long";

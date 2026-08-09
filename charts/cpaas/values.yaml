@@ -1,0 +1,27 @@
+global:
+  domain: support.enterprise.com
+  mode: single_tenant
+
+backend:
+  image: cpaas-backend:latest
+  replicas: 1
+  env:
+    ASPNETCORE_ENVIRONMENT: Production
+    DEPLOYMENT_MODE: single_tenant
+    JWT_KEY: "super_secret_fallback_key_that_is_at_least_32_bytes_long"
+    LICENSE_KEY: "" # Override via helm set
+
+frontend:
+  image: cpaas-frontend:latest
+  replicas: 1
+  env:
+    NEXT_PUBLIC_DEPLOYMENT_MODE: single_tenant
+    NEXT_PUBLIC_API_URL: "http://backend-svc:5000"
+
+postgres:
+  host: postgres-svc
+  password: cpaas_db_password
+
+livekit:
+  url: "ws://livekit-svc:7880"
+  secret: "livekit_secret"

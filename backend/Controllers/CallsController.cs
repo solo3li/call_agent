@@ -17,10 +17,14 @@ namespace backend.Controllers
     public class CallsController : ControllerBase
     {
         private readonly TenantDbContext _context;
+        private readonly SharedDbContext _sharedDb;
+        private readonly ILicenseService _licenseService;
 
-        public CallsController(TenantDbContext context)
+        public CallsController(TenantDbContext context, SharedDbContext sharedDb, ILicenseService licenseService)
         {
             _context = context;
+            _sharedDb = sharedDb;
+            _licenseService = licenseService;
         }
 
         public class CallRecordDto
