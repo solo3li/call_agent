@@ -1,0 +1,111 @@
+# ─────────────────────────────────────────────
+# Global Settings
+# ─────────────────────────────────────────────
+global:
+  # VPS public IP — nip.io will auto-resolve subdomains
+  vpsIp: "167.71.66.188"
+  # Domain pattern: <service>.167.71.66.188.nip.io
+  domain: "167.71.66.188.nip.io"
+  imageRegistry: ""
+
+# ─────────────────────────────────────────────
+# Namespace
+# ─────────────────────────────────────────────
+namespace: cpaas
+
+# ─────────────────────────────────────────────
+# PostgreSQL (built-in)
+# ─────────────────────────────────────────────
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  database: cpaas_db
+  username: cpaas
+  password: cpaas_dev_pass
+  storageSize: 5Gi
+
+# ─────────────────────────────────────────────
+# Redis (built-in)
+# ─────────────────────────────────────────────
+redis:
+  enabled: true
+  image: redis:7-alpine
+
+# ─────────────────────────────────────────────
+# MinIO (built-in)
+# ─────────────────────────────────────────────
+minio:
+  enabled: true
+  image: minio/minio
+  accessKey: admin
+  secretKey: minio_dev_password
+  storageSize: 10Gi
+
+# ─────────────────────────────────────────────
+# LiveKit Server
+# ─────────────────────────────────────────────
+livekit:
+  enabled: true
+  image: livekit/livekit-server:latest
+  apiKey: devkey
+  apiSecret: livekit_secret_key_1234567890123
+
+# ─────────────────────────────────────────────
+# LiveKit SIP Bridge
+# ─────────────────────────────────────────────
+livekitSip:
+  enabled: true
+  image: livekit/sip:latest
+
+# ─────────────────────────────────────────────
+# FreeSWITCH
+# ─────────────────────────────────────────────
+freeswitch:
+  enabled: true
+  image: call_agent-freeswitch:latest
+  imagePullPolicy: Never    # use local image built by docker compose
+  eslPassword: esl_dev_password
+  domain: "167.71.66.188.nip.io"
+
+# ─────────────────────────────────────────────
+# Go AI Agent
+# ─────────────────────────────────────────────
+agent:
+  enabled: true
+  image: call_agent-go-agent:latest
+  imagePullPolicy: Never
+  geminiApiKey: "REDACTED"
+  replicaCount: 1
+
+# ─────────────────────────────────────────────
+# ASP.NET Backend
+# ─────────────────────────────────────────────
+backend:
+  enabled: true
+  image: call_agent-backend:latest
+  imagePullPolicy: Never
+  replicaCount: 1
+  jwtKey: "cpaas_super_secret_jwt_key_that_is_at_least_32_bytes_long_for_hmac"
+  jwtIssuer: "cpaas_backend"
+  jwtAudience: "cpaas_frontend"
+  internalApiKey: "dev_internal_key"
+  deploymentMode: "single_tenant"
+
+# ─────────────────────────────────────────────
+# Next.js Frontend
+# ─────────────────────────────────────────────
+frontend:
+  enabled: true
+  image: call_agent-frontend:latest
+  imagePullPolicy: Never
+  replicaCount: 1
+
+# ─────────────────────────────────────────────
+# Ingress (Traefik)
+# ─────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: traefik
+  # frontend.167.71.66.188.nip.io  → frontend:3000
+  # api.167.71.66.188.nip.io       → backend:8080
+  # livekit.167.71.66.188.nip.io   → livekit:7880

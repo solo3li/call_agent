@@ -1,0 +1,10 @@
+---
+# ══════════════════════════════════════════
+# NAMESPACE
+# ══════════════════════════════════════════
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  labels:
+    {{- include "cpaas.labels" . | nindent 4 }}

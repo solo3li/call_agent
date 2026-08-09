@@ -1,0 +1,99 @@
+---
+# ══════════════════════════════════════════
+# TRAEFIK INGRESS ROUTES (nip.io domains)
+#
+# Domains:
+#   frontend.167.71.66.188.nip.io  → cpaas-frontend:3000
+#   api.167.71.66.188.nip.io       → cpaas-backend:8080
+#   livekit.167.71.66.188.nip.io   → cpaas-livekit:7880
+#   minio.167.71.66.188.nip.io     → cpaas-minio:9001 (console)
+# ══════════════════════════════════════════
+{{- if .Values.ingress.enabled }}
+
+# ── Frontend ──────────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-frontend-route
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "cpaas.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`frontend.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+        - name: cpaas-frontend
+          port: 3000
+---
+# ── Backend API ───────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-api-route
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "cpaas.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`api.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+        - name: cpaas-backend
+          port: 8080
+---
+# ── LiveKit WebSocket ─────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-livekit-route
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "cpaas.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`livekit.{{ .Values.global.domain }}`)
+      kind: Rule
+      middlewares:
+        - name: cpaas-ws-headers
+      services:
+        - name: cpaas-livekit
+          port: 7880
+---
+# ── MinIO Console ─────────────────────────
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpaas-minio-route
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "cpaas.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`minio.{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+        - name: cpaas-minio
+          port: 9001
+---
+# ── Middleware: WebSocket headers for LiveKit ──
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cpaas-ws-headers
+  namespace: {{ .Values.namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "http"
+    customResponseHeaders:
+      Connection: "Upgrade"
+{{- end }}

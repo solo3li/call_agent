@@ -1,0 +1,158 @@
+---
+# ══════════════════════════════════════════
+# ASP.NET BACKEND — Deployment + Service
+# ══════════════════════════════════════════
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpaas-backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cpaas-backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: cpaas-backend
+  template:
+    metadata:
+      labels:
+        app: cpaas-backend
+    spec:
+      containers:
+        - name: backend
+          image: {{ .Values.backend.image }}
+          imagePullPolicy: {{ .Values.backend.imagePullPolicy }}
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: CONNECTION_STRING
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: JWT_KEY
+            - name: Jwt__Issuer
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: JWT_ISSUER
+            - name: Jwt__Audience
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: JWT_AUDIENCE
+            - name: LIVEKIT_URL
+              value: "ws://cpaas-livekit:7880"
+            - name: LIVEKIT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: LIVEKIT_API_KEY
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: LIVEKIT_API_SECRET
+            - name: GO_AGENT_URL
+              value: "http://cpaas-agent:8080"
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: INTERNAL_API_KEY
+            - name: DEPLOYMENT_MODE
+              value: {{ .Values.backend.deploymentMode | quote }}
+            - name: ALLOWED_ORIGINS
+              value: "http://{{ "frontend" }}.{{ .Values.global.domain }},https://{{ "frontend" }}.{{ .Values.global.domain }}"
+            - name: Google__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: cpaas-secrets
+                  key: GEMINI_API_KEY
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /api/internal/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/internal/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpaas-backend
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: cpaas-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+{{- end }}
+---
+# ══════════════════════════════════════════
+# NEXT.JS FRONTEND — Deployment + Service
+# ══════════════════════════════════════════
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpaas-frontend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cpaas-frontend
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: cpaas-frontend
+  template:
+    metadata:
+      labels:
+        app: cpaas-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: {{ .Values.frontend.image }}
+          imagePullPolicy: {{ .Values.frontend.imagePullPolicy }}
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://api.{{ .Values.global.domain }}"
+            - name: NEXT_PUBLIC_LIVEKIT_URL
+              value: "wss://livekit.{{ .Values.global.domain }}"
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpaas-frontend
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: cpaas-frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+{{- end }}

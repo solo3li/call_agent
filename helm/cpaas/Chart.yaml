@@ -1,0 +1,14 @@
+apiVersion: v2
+name: cpaas
+description: CPaaS Voice AI Platform — Full Stack Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - cpaas
+  - voip
+  - ai
+  - freeswitch
+  - livekit
+maintainers:
+  - name: CPaaS Team
