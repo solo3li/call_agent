@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "form-data": "^4.0.6",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

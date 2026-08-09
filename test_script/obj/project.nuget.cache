@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "OgQs+SFKt8s=",
+  "success": true,
+  "projectFilePath": "/root/callagent/call_agent/test_script/test_script.csproj",
+  "expectedPackageFiles": [
+    "/root/.nuget/packages/microsoft.bcl.cryptography/10.0.2/microsoft.bcl.cryptography.10.0.2.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.identitymodel.abstractions/8.22.0/microsoft.identitymodel.abstractions.8.22.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.identitymodel.jsonwebtokens/8.22.0/microsoft.identitymodel.jsonwebtokens.8.22.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.identitymodel.logging/8.22.0/microsoft.identitymodel.logging.8.22.0.nupkg.sha512",
+    "/root/.nuget/packages/microsoft.identitymodel.tokens/8.22.0/microsoft.identitymodel.tokens.8.22.0.nupkg.sha512",
+    "/root/.nuget/packages/newtonsoft.json/13.0.4/newtonsoft.json.13.0.4.nupkg.sha512",
+    "/root/.nuget/packages/system.identitymodel.tokens.jwt/8.22.0/system.identitymodel.tokens.jwt.8.22.0.nupkg.sha512"
+  ],
+  "logs": []
+}
