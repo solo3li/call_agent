@@ -240,6 +240,7 @@ type CallSession struct {
 	TransferredTo  string
 	Sentiment      string
 	ESLClient      *ESLClient
+	Disconnect     func()
 }
 
 func NewCallSession(req JoinRequest) *CallSession {

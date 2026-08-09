@@ -20,6 +20,13 @@ import {
 } from '@carbon/react';
 import { PhoneFilled, StopFilled, MicrophoneFilled, VolumeUpFilled } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  LiveKitRoom,
+  AudioConference,
+  RoomAudioRenderer,
+  useLocalParticipant,
+} from '@livekit/components-react';
+import '@livekit/components-styles';
 
 export default function LiveCallsPage() {
   const [activeCalls, setActiveCalls] = useState<any[]>([]);
@@ -28,6 +35,9 @@ export default function LiveCallsPage() {
   // Monitoring State
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [monitoredCall, setMonitoredCall] = useState<any>(null);
+  const [liveKitToken, setLiveKitToken] = useState<string | null>(null);
+  const [liveKitUrl, setLiveKitUrl] = useState<string | null>(null);
+  const [isTakeover, setIsTakeover] = useState(false);
 
   useEffect(() => {
     // Mock fetching active calls for now until WebRTC/Asterisk is fully integrated
@@ -35,38 +45,71 @@ export default function LiveCallsPage() {
       setActiveCalls([
         {
           id: 'call-1',
+          roomName: 'room_mock_123',
           agentName: 'Nova - Sales',
           clientNumber: '+20 100 123 4567',
           status: 'In Progress',
           duration: '02:15',
           emotion: 'Professional'
-        },
-        {
-          id: 'call-2',
-          agentName: 'Ursa - Support',
-          clientNumber: '+971 50 987 6543',
-          status: 'In Progress',
-          duration: '05:30',
-          emotion: 'Empathetic'
         }
       ]);
       setLoading(false);
     }, 1000);
   }, []);
 
-  const handleListenIn = (call: any) => {
+  const handleListenIn = async (call: any) => {
     setMonitoredCall(call);
     setIsMonitoring(true);
+    setIsTakeover(false);
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/connection/observer-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `ApiKey ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          roomId: call.roomName,
+          participantName: 'supervisor'
+        })
+      });
+      const data = await res.json();
+      setLiveKitToken(data.token);
+      setLiveKitUrl(data.liveKitUrl);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleStopMonitoring = () => {
     setIsMonitoring(false);
+    setLiveKitToken(null);
+    setLiveKitUrl(null);
+    setIsTakeover(false);
     setTimeout(() => setMonitoredCall(null), 300);
   };
 
-  const handleTakeover = () => {
-    alert(`Transferring call ${monitoredCall?.id} to your Web Phone extension...`);
-    handleStopMonitoring();
+  const handleTakeover = async () => {
+    setIsTakeover(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/connection/takeover', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `ApiKey ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          roomId: monitoredCall.roomName,
+          participantName: 'supervisor'
+        })
+      });
+      const data = await res.json();
+      setLiveKitToken(data.token);
+      setLiveKitUrl(data.liveKitUrl);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const headers = [
@@ -158,6 +201,19 @@ export default function LiveCallsPage() {
               <p style={{ color: '#525252' }}>Number: {monitoredCall.clientNumber}</p>
             </div>
             
+            {liveKitToken && liveKitUrl && (
+              <LiveKitRoom
+                video={false}
+                audio={true}
+                token={liveKitToken}
+                serverUrl={liveKitUrl}
+                connect={true}
+              >
+                <RoomAudioRenderer />
+                {isTakeover && <TakeoverMicManager />}
+              </LiveKitRoom>
+            )}
+
             {/* Audio visualization animation using framer-motion */}
             <div style={{ display: 'flex', gap: '8px', height: '60px', alignItems: 'center' }}>
               {[1, 2, 3, 4, 5, 6, 7].map((i) => (
@@ -172,16 +228,17 @@ export default function LiveCallsPage() {
                   }}
                   style={{
                     width: '12px',
-                    backgroundColor: '#0f62fe',
+                    backgroundColor: isTakeover ? '#da1e28' : '#0f62fe',
                     borderRadius: '4px'
                   }}
                 />
               ))}
             </div>
 
-            <p style={{ color: '#525252', fontSize: '0.875rem' }}>
-              You are secretly listening to this call. The client and AI cannot hear you.
-              Click "Takeover Call" to disconnect the AI and speak to the client yourself.
+            <p style={{ color: '#525252', fontSize: '0.875rem', textAlign: 'center' }}>
+              {isTakeover 
+                ? "You are now speaking directly to the client. The AI agent has been disconnected."
+                : "You are secretly listening to this call. The client and AI cannot hear you. Click 'Takeover Call' to disconnect the AI and speak to the client yourself."}
             </p>
           </div>
         )}
@@ -200,4 +257,17 @@ export default function LiveCallsPage() {
       `}} />
     </div>
   );
+}
+
+// Component to handle mic enablement when takeover happens
+function TakeoverMicManager() {
+  const { localParticipant } = useLocalParticipant();
+  
+  useEffect(() => {
+    if (localParticipant) {
+      localParticipant.setMicrophoneEnabled(true);
+    }
+  }, [localParticipant]);
+  
+  return null;
 }

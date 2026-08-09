@@ -156,13 +156,98 @@ namespace backend.Controllers
             });
         }
 
-        [HttpPost("sip-transfer")]
-        public ActionResult InitiateSipTransfer([FromBody] SipTransferRequestDto request)
+        [HttpPost("observer-token")]
+        public ActionResult<CreateTokenResponseDto> CreateObserverToken([FromBody] CreateTransferTokenRequestDto request)
         {
-            // Here we would use LiveKit Server SDK (or Twirp HTTP API) to call CreateSipParticipant
-            // For now, we simulate success since livekit-sip gateway is pending configuration
+            string livekitApiKey = _configuration["LIVEKIT_API_KEY"] ?? "devkey";
+            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "livekit_secret_key_1234567890123";
+            string livekitUrl = _configuration["LIVEKIT_URL"] ?? "ws://localhost:7880";
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(livekitApiSecret));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             
-            return Ok(new { success = true, message = $"Initiated SIP dial-out to {request.SipUri} for room {request.RoomId}" });
+            var claims = new Dictionary<string, object>
+            {
+                { "iss", livekitApiKey },
+                { "sub", request.ParticipantName },
+                { "name", request.ParticipantName },
+                { "video", new Dictionary<string, object> { 
+                    { "roomJoin", true }, 
+                    { "room", request.RoomId },
+                    { "canPublish", false }, // Listen-only
+                    { "canSubscribe", true },
+                    { "hidden", true } // Hide from other participants
+                }}
+            };
+
+            var payload = new JwtPayload(livekitApiKey, null, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+            foreach (var claim in claims) {
+                payload[claim.Key] = claim.Value;
+            }
+
+            var token = new JwtSecurityToken(new JwtHeader(credentials), payload);
+            return Ok(new CreateTokenResponseDto
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                RoomName = request.RoomId,
+                LiveKitUrl = livekitUrl
+            });
+        }
+
+        [HttpPost("takeover")]
+        public async Task<ActionResult<CreateTokenResponseDto>> TakeoverSession([FromBody] CreateTransferTokenRequestDto request)
+        {
+            var callRecord = await _tenantDb.CallRecords.FirstOrDefaultAsync(c => c.RoomName == request.RoomId);
+            if (callRecord == null) return NotFound("Call not found");
+
+            callRecord.SupervisorTakeoverAt = DateTime.UtcNow;
+            await _tenantDb.SaveChangesAsync();
+
+            // Wake up Golang Worker to shutdown AI gracefully
+            var workerUrl = _configuration["GO_AGENT_URL"] ?? "http://127.0.0.1:8080";
+            var workerEndpoint = $"{workerUrl.TrimEnd('/')}/worker/takeover";
+            var httpClient = _httpClientFactory.CreateClient();
+            var content = new StringContent(JsonSerializer.Serialize(new { room_name = request.RoomId }), Encoding.UTF8, "application/json");
+            
+            try 
+            {
+                await httpClient.PostAsync(workerEndpoint, content);
+                // We ignore failure here to ensure supervisor still gets the token even if AI doesn't close cleanly
+            }
+            catch (Exception) {}
+
+            string livekitApiKey = _configuration["LIVEKIT_API_KEY"] ?? "devkey";
+            string livekitApiSecret = _configuration["LIVEKIT_API_SECRET"] ?? "livekit_secret_key_1234567890123";
+            string livekitUrl = _configuration["LIVEKIT_URL"] ?? "ws://localhost:7880";
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(livekitApiSecret));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            
+            var claims = new Dictionary<string, object>
+            {
+                { "iss", livekitApiKey },
+                { "sub", request.ParticipantName },
+                { "name", request.ParticipantName },
+                { "video", new Dictionary<string, object> { 
+                    { "roomJoin", true }, 
+                    { "room", request.RoomId },
+                    { "canPublish", true },
+                    { "canSubscribe", true }
+                }}
+            };
+
+            var payload = new JwtPayload(livekitApiKey, null, null, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+            foreach (var claim in claims) {
+                payload[claim.Key] = claim.Value;
+            }
+
+            var token = new JwtSecurityToken(new JwtHeader(credentials), payload);
+            return Ok(new CreateTokenResponseDto
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                RoomName = request.RoomId,
+                LiveKitUrl = livekitUrl
+            });
         }
     }
 }

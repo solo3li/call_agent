@@ -166,6 +166,34 @@ func main() {
 		go runCallSession(session, req.AIProvider, finalPrompt, lkUrl, lkKey, lkSecret, aiKey, backendURL)
 	})
 
+	// Supervisor Takeover endpoint
+	http.HandleFunc("/worker/takeover", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var req struct {
+			RoomName string `json:"room_name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+
+		if val, ok := activeSessions.Load(req.RoomName); ok {
+			session := val.(*CallSession)
+			log.Printf("Agent: Supervisor taking over room=%s. Evicting AI.", req.RoomName)
+			if session.Disconnect != nil {
+				session.Disconnect()
+			}
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]string{"status": "takeover_initiated"})
+		} else {
+			http.Error(w, "Session not found", http.StatusNotFound)
+		}
+	})
+
 	// Health endpoint — used by K8s liveness/readiness probes
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		sessionMu.Lock()
@@ -253,6 +281,7 @@ func runCallSession(
 	// Connect to LiveKit and block until room is disconnected
 	room, done := ConnectToLiveKit(lkUrl, lkKey, lkSecret, session.RoomName, bridge)
 	if room != nil {
+		session.Disconnect = func() { room.Disconnect() }
 		<-done
 		log.Printf("Agent: LiveKit room %s closed", session.RoomName)
 	}

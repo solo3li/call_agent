@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace backend.Models
 {
@@ -36,18 +38,25 @@ namespace backend.Models
         public string? HangupCause { get; set; }        // NORMAL_CLEARING | NO_ANSWER | BUSY | etc.
 
         // Human transfer
-        public string? TransferredTo { get; set; }      // SIP URI of human agent if transferred
-
         // AI analysis
         public string? Sentiment { get; set; }          // positive | neutral | negative
         public string? Transcript { get; set; }         // Full conversation transcript (optional)
 
-        // Recording (stored in MinIO)
+        [Column("recording_url")]
         public string? RecordingUrl { get; set; }
+
+        [Column("transferred_to")]
+        public string? TransferredTo { get; set; }
+
+        [Column("supervisor_takeover_at")]
+        public DateTime? SupervisorTakeoverAt { get; set; }
 
         // Direction
         public string Direction { get; set; } = "inbound";  // inbound | outbound
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [JsonIgnore]
+        public AiAgent? Agent { get; set; }
     }
 }
