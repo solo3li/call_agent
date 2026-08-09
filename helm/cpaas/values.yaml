@@ -74,7 +74,7 @@ agent:
   enabled: true
   image: call_agent-go-agent:latest
   imagePullPolicy: Never
-  geminiApiKey: "REDACTED"
+  geminiApiKey: "YOUR_GEMINI_API_KEY_HERE"
   replicaCount: 1
 
 # ─────────────────────────────────────────────
