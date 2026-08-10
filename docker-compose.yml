@@ -164,32 +164,22 @@ services:
       - minio
     restart: unless-stopped
 
-  go-agent:
+  python-agent:
     build:
-      context: ./agent
+      context: ./python-agent
       dockerfile: Dockerfile
-    container_name: cpaas-go-agent
-    ports:
-      - "8082:8080"
+    container_name: cpaas-python-agent
     environment:
       LIVEKIT_URL: ws://livekit:7880
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
-      AI_API_KEY: ${Google__ApiKey:-AQ.Ab8RN6IcYXc8ArNRAhWiYfv3IFBW1-3FfFDSXSk1Ld3eVkNDiA}
-      BACKEND_API_URL: http://backend:8080
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
-      PORT: 8080
+      GEMINI_API_KEY: ${Google__ApiKey:-AQ.Ab8RN6IcYXc8ArNRAhWiYfv3IFBW1-3FfFDSXSk1Ld3eVkNDiA}
     networks:
       - voip-net
       - web-net
     depends_on:
       - livekit
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
 
   # ─────────────────────────────────────────────────────────────────────
   # CONTROL PLANE: ASP.NET Backend + React Frontend
