@@ -216,6 +216,24 @@ func (g *GeminiLiveConn) handleIncoming() {
 		// ---- Handle setup confirmation ----
 		if resp.SetupComplete != nil {
 			log.Printf("Gemini: Setup complete for room %s ✓", g.session.RoomName)
+			triggerMsg := map[string]interface{}{
+				"clientContent": map[string]interface{}{
+					"turns": []map[string]interface{}{
+						{
+							"role": "user",
+							"parts": []map[string]interface{}{
+								{"text": "Hello, please greet the user."},
+							},
+						},
+					},
+					"turnComplete": true,
+				},
+			}
+			if err := g.conn.WriteJSON(triggerMsg); err != nil {
+				log.Printf("Gemini: Failed to send trigger msg: %v", err)
+			} else {
+				log.Printf("Gemini: Initial greeting trigger sent")
+			}
 			continue
 		}
 
