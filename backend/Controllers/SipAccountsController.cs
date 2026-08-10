@@ -36,11 +36,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<SipAccount>> CreateSipAccount()
         {
-            var userIdStr = User.FindFirstValue("UserId");
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStr, out var userId)) 
             {
-                // Fallback or handle appropriately, for now we mock
-                userId = Guid.NewGuid();
+                return Unauthorized(new { message = "Invalid user token" });
             }
 
             var random = new Random();
