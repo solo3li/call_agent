@@ -81,6 +81,21 @@ spec:
 # LIVEKIT SIP BRIDGE
 # ══════════════════════════════════════════
 {{- if .Values.livekitSip.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cpaas-livekit-sip-config
+  namespace: {{ .Values.namespace }}
+data:
+  config.yaml: |
+    api_key: {{ .Values.livekit.apiKey }}
+    api_secret: {{ .Values.livekit.apiSecret }}
+    ws_url: ws://cpaas-livekit:7880
+    sip_port: 5060
+    use_external_ip: true
+    redis:
+      address: cpaas-redis:6379
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,21 +116,6 @@ spec:
       containers:
         - name: livekit-sip
           image: {{ .Values.livekitSip.image }}
-          env:
-            - name: LIVEKIT_URL
-              value: "ws://cpaas-livekit:7880"
-            - name: LIVEKIT_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: cpaas-secrets
-                  key: LIVEKIT_API_KEY
-            - name: LIVEKIT_API_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: cpaas-secrets
-                  key: LIVEKIT_API_SECRET
-            - name: SIP_PORT
-              value: "5060"
           ports:
             - name: sip-udp
               containerPort: 5060
@@ -123,6 +123,13 @@ spec:
             - name: sip-tcp
               containerPort: 5060
               protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /sip
+      volumes:
+        - name: config
+          configMap:
+            name: cpaas-livekit-sip-config
 ---
 apiVersion: v1
 kind: Service
