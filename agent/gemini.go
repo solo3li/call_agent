@@ -180,9 +180,9 @@ func (g *GeminiLiveConn) streamOutgoing() {
 		b64 := base64.StdEncoding.EncodeToString(pcmBytes)
 		msg := map[string]interface{}{
 			"realtimeInput": map[string]interface{}{
-				"mediaChunks": []map[string]string{
-					// Gemini expects PCM at 16kHz, 16-bit, mono
-					{"mimeType": "audio/pcm;rate=16000", "data": b64},
+				"audio": map[string]string{
+					"mimeType": "audio/pcm;rate=16000", 
+					"data": b64,
 				},
 			},
 		}
