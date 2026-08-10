@@ -12,7 +12,7 @@ using backend.Data;
 namespace backend.Migrations.Shared
 {
     [DbContext(typeof(SharedDbContext))]
-    [Migration("20260809183843_InitialShared")]
+    [Migration("20260810010529_InitialShared")]
     partial class InitialShared
     {
         /// <inheritdoc />
@@ -55,6 +55,62 @@ namespace backend.Migrations.Shared
                     b.ToTable("api_keys", "public");
                 });
 
+            modelBuilder.Entity("backend.Models.MarketplacePersona", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BehaviorRulesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PersonalityJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("PriceUsd")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("SystemPromptTemplate")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoiceId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MarketplacePersonas");
+                });
+
             modelBuilder.Entity("backend.Models.PhoneNumber", b =>
                 {
                     b.Property<Guid>("Id")
@@ -81,45 +137,20 @@ namespace backend.Migrations.Shared
                     b.ToTable("phone_numbers", "public");
                 });
 
-            modelBuilder.Entity("backend.Models.SipAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Domain")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("sip_accounts", "public");
-                });
-
             modelBuilder.Entity("backend.Models.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BrandingJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CustomDomain")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -175,17 +206,6 @@ namespace backend.Migrations.Shared
                 });
 
             modelBuilder.Entity("backend.Models.PhoneNumber", b =>
-                {
-                    b.HasOne("backend.Models.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("backend.Models.SipAccount", b =>
                 {
                     b.HasOne("backend.Models.Tenant", "Tenant")
                         .WithMany()

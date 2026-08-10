@@ -12,8 +12,8 @@ using backend.Data;
 namespace backend.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20260809185929_Phase2Tenant")]
-    partial class Phase2Tenant
+    [Migration("20260810010546_InitialTenant")]
+    partial class InitialTenant
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -122,13 +122,17 @@ namespace backend.Migrations.Tenant
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ActionId")
+                    b.Property<Guid?>("ActionId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CallActionId")
+                    b.Property<string>("ActionName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CallActionId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CallId")
+                    b.Property<Guid>("CallRecordId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -152,7 +156,7 @@ namespace backend.Migrations.Tenant
 
                     b.HasIndex("CallActionId");
 
-                    b.HasIndex("CallId");
+                    b.HasIndex("CallRecordId");
 
                     b.ToTable("ActionLogs");
                 });
@@ -161,6 +165,9 @@ namespace backend.Migrations.Tenant
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AgentId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AiAgentId")
@@ -200,7 +207,8 @@ namespace backend.Migrations.Tenant
                         .HasColumnType("uuid");
 
                     b.Property<string>("RecordingUrl")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("recording_url");
 
                     b.Property<string>("RoomName")
                         .HasColumnType("text");
@@ -215,13 +223,20 @@ namespace backend.Migrations.Tenant
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("SupervisorTakeoverAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("supervisor_takeover_at");
+
                     b.Property<string>("Transcript")
                         .HasColumnType("text");
 
                     b.Property<string>("TransferredTo")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("transferred_to");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
 
                     b.HasIndex("AiAgentId");
 
@@ -398,29 +413,26 @@ namespace backend.Migrations.Tenant
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Domain")
+                    b.Property<string>("Extension")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordEnc")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("TenantId")
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("UserId");
 
-                    b.ToTable("sip_accounts", "public", t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SipAccounts");
                 });
 
             modelBuilder.Entity("backend.Models.Tenant", b =>
@@ -429,8 +441,14 @@ namespace backend.Migrations.Tenant
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BrandingJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CustomDomain")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -567,13 +585,11 @@ namespace backend.Migrations.Tenant
                 {
                     b.HasOne("backend.Models.CallAction", "CallAction")
                         .WithMany()
-                        .HasForeignKey("CallActionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CallActionId");
 
                     b.HasOne("backend.Models.CallRecord", "Call")
                         .WithMany()
-                        .HasForeignKey("CallId")
+                        .HasForeignKey("CallRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -584,6 +600,10 @@ namespace backend.Migrations.Tenant
 
             modelBuilder.Entity("backend.Models.CallRecord", b =>
                 {
+                    b.HasOne("backend.Models.AiAgent", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentId");
+
                     b.HasOne("backend.Models.AiAgent", "AiAgent")
                         .WithMany("CallRecords")
                         .HasForeignKey("AiAgentId")
@@ -592,6 +612,8 @@ namespace backend.Migrations.Tenant
                     b.HasOne("backend.Models.Persona", "Persona")
                         .WithMany()
                         .HasForeignKey("PersonaId");
+
+                    b.Navigation("Agent");
 
                     b.Navigation("AiAgent");
 
@@ -624,13 +646,13 @@ namespace backend.Migrations.Tenant
 
             modelBuilder.Entity("backend.Models.SipAccount", b =>
                 {
-                    b.HasOne("backend.Models.Tenant", "Tenant")
+                    b.HasOne("backend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("TenantId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Tenant");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.TenantDomain", b =>

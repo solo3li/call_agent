@@ -15,6 +15,29 @@ namespace backend.Migrations.Shared
                 name: "public");
 
             migrationBuilder.CreateTable(
+                name: "MarketplacePersonas",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Category = table.Column<string>(type: "text", nullable: false),
+                    AvatarUrl = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    VoiceId = table.Column<string>(type: "text", nullable: false),
+                    Language = table.Column<string>(type: "text", nullable: false),
+                    SystemPromptTemplate = table.Column<string>(type: "text", nullable: false),
+                    PersonalityJson = table.Column<string>(type: "text", nullable: false),
+                    BehaviorRulesJson = table.Column<string>(type: "text", nullable: false),
+                    PriceUsd = table.Column<decimal>(type: "numeric", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MarketplacePersonas", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "tenants",
                 schema: "public",
                 columns: table => new
@@ -23,6 +46,8 @@ namespace backend.Migrations.Shared
                     Name = table.Column<string>(type: "text", nullable: false),
                     SchemaName = table.Column<string>(type: "text", nullable: false),
                     Plan = table.Column<string>(type: "text", nullable: false),
+                    BrandingJson = table.Column<string>(type: "jsonb", nullable: true),
+                    CustomDomain = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -79,30 +104,6 @@ namespace backend.Migrations.Shared
                 });
 
             migrationBuilder.CreateTable(
-                name: "sip_accounts",
-                schema: "public",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Username = table.Column<string>(type: "text", nullable: false),
-                    Password = table.Column<string>(type: "text", nullable: false),
-                    Domain = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_sip_accounts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_sip_accounts_tenants_TenantId",
-                        column: x => x.TenantId,
-                        principalSchema: "public",
-                        principalTable: "tenants",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "tenant_domains",
                 schema: "public",
                 columns: table => new
@@ -137,12 +138,6 @@ namespace backend.Migrations.Shared
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_sip_accounts_TenantId",
-                schema: "public",
-                table: "sip_accounts",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_tenant_domains_TenantId",
                 schema: "public",
                 table: "tenant_domains",
@@ -157,11 +152,10 @@ namespace backend.Migrations.Shared
                 schema: "public");
 
             migrationBuilder.DropTable(
-                name: "phone_numbers",
-                schema: "public");
+                name: "MarketplacePersonas");
 
             migrationBuilder.DropTable(
-                name: "sip_accounts",
+                name: "phone_numbers",
                 schema: "public");
 
             migrationBuilder.DropTable(
