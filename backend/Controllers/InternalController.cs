@@ -295,42 +295,68 @@ namespace backend.Controllers
         }
 
         [HttpPost("fs-config")]
+        [HttpGet("fs-config")]
         [Produces("application/xml")]
-        public async Task<IActionResult> PostFreeSwitchConfig([FromForm] string section, [FromForm] string user, [FromForm] string domain)
+        public async Task<IActionResult> PostFreeSwitchConfig(
+            [FromForm] string? section, [FromForm] string? user, [FromForm] string? domain,
+            [FromQuery] string? section2, [FromQuery] string? user2, [FromQuery] string? domain2)
         {
+            // Support both POST form-data (mod_xml_curl) and GET query string
+            section ??= section2;
+            user ??= user2;
+            domain ??= domain2;
+
             if (section == "directory")
             {
-                if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(domain))
+                if (string.IsNullOrEmpty(user))
                     return NotFound();
 
-                // Resolve domain to tenant
-                var tenantDomain = await _sharedDb.TenantDomains.FirstOrDefaultAsync(td => td.Hostname == domain);
-                if (tenantDomain == null)
-                    return NotFound();
+                Guid tenantId;
 
-                if (!await SwitchToTenantSchema(tenantDomain.TenantId))
+                // Try to resolve domain to tenant via TenantDomains table
+                var tenantDomain = string.IsNullOrEmpty(domain) ? null :
+                    await _sharedDb.TenantDomains.FirstOrDefaultAsync(td => td.Hostname == domain);
+
+                if (tenantDomain != null)
+                {
+                    tenantId = tenantDomain.TenantId;
+                }
+                else
+                {
+                    // Fallback: use the first available tenant (single-tenant mode)
+                    var firstTenant = await _sharedDb.Tenants.OrderBy(t => t.CreatedAt).FirstOrDefaultAsync();
+                    if (firstTenant == null)
+                        return NotFound();
+                    tenantId = firstTenant.Id;
+                }
+
+                if (!await SwitchToTenantSchema(tenantId))
                     return NotFound();
 
                 var sipAccount = await _tenantDb.SipAccounts.FirstOrDefaultAsync(sa => sa.Extension == user);
                 if (sipAccount == null)
                     return NotFound();
 
-                var xmlTemplate = @"
+                var xmlResponse = $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?>
 <document type=""freeswitch/xml"">
   <section name=""directory"">
-    <domain name=""{DOMAIN}"">
+    <domain name=""{domain ?? "default"}"">
       <params>
-        <param name=""dial-string"" value=""{presence_id=${dialed_user}@${dialed_domain}}${sofia_contact(${dialed_user}@${dialed_domain})}""/>
+        <param name=""dial-string"" value=""{{presence_id=${{dialed_user}}@${{dialed_domain}}}}${{sofia_contact(${{dialed_user}}@${{dialed_domain}})}}""/>
       </params>
       <groups>
         <group name=""default"">
           <users>
-            <user id=""{USER}"">
+            <user id=""{sipAccount.Extension}"">
               <params>
-                <param name=""password"" value=""{PASSWORD}""/>
+                <param name=""password"" value=""{sipAccount.PasswordEnc}""/>
+                <param name=""vm-password"" value=""{sipAccount.PasswordEnc}""/>
               </params>
               <variables>
+                <variable name=""toll_allow"" value=""domestic,international,local""/>
                 <variable name=""user_context"" value=""cpaas_inbound""/>
+                <variable name=""effective_caller_id_name"" value=""{sipAccount.Extension}""/>
+                <variable name=""effective_caller_id_number"" value=""{sipAccount.Extension}""/>
               </variables>
             </user>
           </users>
@@ -340,16 +366,12 @@ namespace backend.Controllers
   </section>
 </document>";
 
-                var xml = xmlTemplate
-                    .Replace("{DOMAIN}", domain)
-                    .Replace("{USER}", sipAccount.Extension)
-                    .Replace("{PASSWORD}", sipAccount.PasswordEnc);
-
-                return Content(xml, "application/xml");
+                return Content(xmlResponse, "application/xml");
             }
-            
+
             return NotFound();
         }
+
 
         private async Task<string> GetCallerContext(string? callerNumber)
         {
