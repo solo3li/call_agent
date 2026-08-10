@@ -52,11 +52,12 @@ namespace backend.Controllers
                         var content = new StringContent(JsonSerializer.Serialize(workerPayload), Encoding.UTF8, "application/json");
                         
                         // Wake up the AI Agent
-                        await httpClient.PostAsync("http://127.0.0.1:8080/worker/join", content);
+                        var agentUrl = Environment.GetEnvironmentVariable("AGENT_URL") ?? "http://cpaas-agent:8080/worker/join";
+                        await httpClient.PostAsync(agentUrl, content);
                     }
                 }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
                 // Ignore parsing exceptions
             }

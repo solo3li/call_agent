@@ -18,6 +18,10 @@ data:
       use_external_ip: true
     keys:
       {{ .Values.livekit.apiKey }}: {{ .Values.livekit.apiSecret }}
+    webhook:
+      api_key: {{ .Values.livekit.apiKey }}
+      urls:
+        - "http://cpaas-backend:8080/api/webhook/livekit"
     logging:
       level: info
     redis:
