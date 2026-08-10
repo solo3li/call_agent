@@ -113,9 +113,44 @@ namespace backend.Controllers
 
             if (string.IsNullOrEmpty(currentSchema) || currentSchema == "public")
             {
-                // We don't have a central user mapping yet, so a tenant must be identified
-                // either by the TenantMiddleware (Host header) or passed explicitly in LoginDto.
-                return BadRequest(new { message = "Could not identify tenant. Please provide TenantId or use a tenant-specific domain." });
+                // Find tenant by querying all schemas
+                var tenants = await _sharedDb.Tenants.ToListAsync();
+                foreach (var t in tenants)
+                {
+                    try
+                    {
+                        // Use raw ADO.NET to check if user exists in this schema
+                        using (var command = _sharedDb.Database.GetDbConnection().CreateCommand())
+                        {
+                            command.CommandText = $"SELECT COUNT(1) FROM \"{t.SchemaName}\".\"Users\" WHERE \"Email\" = @email";
+                            var param = command.CreateParameter();
+                            param.ParameterName = "@email";
+                            param.Value = dto.Email;
+                            command.Parameters.Add(param);
+
+                            if (command.Connection.State != System.Data.ConnectionState.Open)
+                                await command.Connection.OpenAsync();
+
+                            var result = await command.ExecuteScalarAsync();
+                            if (result != null && Convert.ToInt32(result) > 0)
+                            {
+                                _tenantProvider.SetTenantInfo(t.SchemaName, t.Id);
+                                currentSchema = t.SchemaName;
+                                currentTenantId = t.Id;
+                                break;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore schemas that might not have Users table yet
+                    }
+                }
+
+                if (string.IsNullOrEmpty(currentSchema) || currentSchema == "public")
+                {
+                    return Unauthorized(new { message = "Invalid email or password" });
+                }
             }
 
             var user = await _tenantDb.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
