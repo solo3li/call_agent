@@ -241,6 +241,11 @@
   <section name="directory" description="SIP User Directory">
     <!-- FreeSWITCH internal domain (used for ESL and internal registrations) -->
     <domain name="${FREESWITCH_DOMAIN}">
+      <user id="1000">
+        <params>
+          <param name="password" value="1234"/>
+        </params>
+      </user>
       <params>
         <param name="dial-string" value="{presence_id=${dialed_user}@${dialed_domain}}${sofia_contact(${dialed_user}@${dialed_domain})}"/>
       </params>
