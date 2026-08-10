@@ -32,7 +32,7 @@ async def entrypoint(ctx: JobContext):
     )
 
     agent = google.beta.MultimodalAgent(
-        model="models/gemini-2.0-flash-exp",
+        model="models/gemini-3.1-flash-live-preview",
         chat_ctx=initial_ctx,
     )
     
