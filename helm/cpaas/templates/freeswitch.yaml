@@ -81,6 +81,14 @@ spec:
       port: 5080
       targetPort: 5080
       protocol: TCP
+    - name: sip-int-udp
+      port: 5060
+      targetPort: 5060
+      protocol: UDP
+    - name: sip-int-tcp
+      port: 5060
+      targetPort: 5060
+      protocol: TCP
     - name: esl
       port: 8021
       targetPort: 8021
