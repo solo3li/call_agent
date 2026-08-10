@@ -21,14 +21,17 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"Started session with {participant.identity}")
 
-    initial_ctx = llm.ChatContext().append(
-        role="system",
-        text=(
-            "أنت مساعد افتراضي ذكي تتحدث اللغة العربية. "
-            "أنت الآن في مكالمة هاتفية مع مستخدم. "
-            "تحدث بشكل طبيعي ومختصر، كما لو كنت في مكالمة حقيقية. "
-            "تجنب الإجابات الطويلة جداً واستخدم نبرة ودية."
-        ),
+    initial_ctx = llm.ChatContext()
+    initial_ctx.add_message(
+        llm.ChatMessage(
+            role="system",
+            content=(
+                "أنت مساعد افتراضي ذكي تتحدث اللغة العربية. "
+                "أنت الآن في مكالمة هاتفية مع مستخدم. "
+                "تحدث بشكل طبيعي ومختصر، كما لو كنت في مكالمة حقيقية. "
+                "تجنب الإجابات الطويلة جداً واستخدم نبرة ودية."
+            )
+        )
     )
 
     agent = google.beta.MultimodalAgent(
