@@ -25,12 +25,12 @@ async def entrypoint(ctx: JobContext):
     initial_ctx.add_message(
         llm.ChatMessage(
             role="system",
-            text=(
+            content=[
                 "أنت مساعد افتراضي ذكي تتحدث اللغة العربية. "
                 "أنت الآن في مكالمة هاتفية مع مستخدم. "
                 "تحدث بشكل طبيعي ومختصر، كما لو كنت في مكالمة حقيقية. "
                 "تجنب الإجابات الطويلة جداً واستخدم نبرة ودية."
-            )
+            ]
         )
     )
 
