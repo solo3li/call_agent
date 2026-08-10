@@ -37,6 +37,9 @@
     <!-- Module Loader -->
     <configuration name="modules.conf" description="Modules">
       <modules>
+        <!-- Logging -->
+        <load module="mod_console"/>
+        <load module="mod_logfile"/>
         <!-- Transport -->
         <load module="mod_sofia"/>
         <!-- Dialplan -->
@@ -121,6 +124,17 @@
           <node type="allow" cidr="10.0.0.0/8"/>
         </list>
       </network-lists>
+    </configuration>
+
+    <!-- Sofia SIP Configuration -->
+    <configuration name="sofia.conf" description="sofia Endpoint">
+      <global_settings>
+        <param name="log-level" value="0"/>
+        <param name="debug-presence" value="0"/>
+      </global_settings>
+      <profiles>
+        <X-PRE-PROCESS cmd="include" data="sip_profiles/*.xml"/>
+      </profiles>
     </configuration>
 
   </section>
