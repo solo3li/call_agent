@@ -22,7 +22,7 @@ namespace backend.Middleware
             var isSingleTenant = configuration["DEPLOYMENT_MODE"] == "single_tenant";
 
             // 1. Check for TenantInfo from JWT claims first (for API calls)
-            if (context.User.Identity?.IsAuthenticated == true && !isSingleTenant)
+            if (context.User.Identity?.IsAuthenticated == true)
             {
                 var schemaClaim = context.User.FindFirst("TenantSchema")?.Value;
                 var tenantIdClaim = context.User.FindFirst("TenantId")?.Value;
