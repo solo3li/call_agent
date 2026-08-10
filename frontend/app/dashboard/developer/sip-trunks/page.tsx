@@ -16,9 +16,9 @@ export default function SipTrunksPage() {
         setAccounts(data.map((s: any) => ({
           id: s.id,
           name: 'SIP Endpoint',
-          username: s.username,
-          password: s.password,
-          domain: s.domain,
+          username: s.extension,
+          password: s.passwordEnc,
+          domain: '167.71.66.188',
           status: 'Offline'
         })));
       }
