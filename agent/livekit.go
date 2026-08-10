@@ -104,10 +104,10 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 				if !ok {
 					return
 				}
-				encodedBytes := bridge.EncodeOutgoingPCM(pcm)
-				if encodedBytes != nil {
+				packets := bridge.EncodeOutgoingPCM(pcm)
+				for _, pkt := range packets {
 					err = outTrack.WriteSample(media.Sample{
-						Data:     encodedBytes,
+						Data:     pkt,
 						Duration: 20 * time.Millisecond,
 					}, nil)
 					if err != nil {

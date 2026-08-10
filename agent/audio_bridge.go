@@ -11,6 +11,7 @@ type AudioBridge struct {
 	encoder *opus.Encoder
 	PCMOut  chan []int16 // Audio coming from User, going to AI
 	PCMIn   chan []int16 // Audio coming from AI, going to User
+	outBuf  []int16      // Buffer for chunking outgoing audio
 }
 
 func NewAudioBridge() *AudioBridge {
@@ -56,7 +57,7 @@ func (b *AudioBridge) DecodeIncomingRTP(payload []byte) {
 	}
 }
 
-func (b *AudioBridge) EncodeOutgoingPCM(pcm []int16) []byte {
+func (b *AudioBridge) EncodeOutgoingPCM(pcm []int16) [][]byte {
 	// Upsample from 24kHz to 48kHz (factor of 2)
 	upsampled := make([]int16, len(pcm)*2)
 	for i := 0; i < len(pcm); i++ {
@@ -69,11 +70,22 @@ func (b *AudioBridge) EncodeOutgoingPCM(pcm []int16) []byte {
 		}
 	}
 
-	out := make([]byte, 1000)
-	n, err := b.encoder.Encode(upsampled, out)
-	if err != nil {
-		log.Printf("Opus encode error: %v", err)
-		return nil
+	b.outBuf = append(b.outBuf, upsampled...)
+
+	var packets [][]byte
+	frameSize := 960 // 20ms at 48kHz
+
+	for len(b.outBuf) >= frameSize {
+		frame := b.outBuf[:frameSize]
+		b.outBuf = b.outBuf[frameSize:]
+
+		out := make([]byte, 1000)
+		n, err := b.encoder.Encode(frame, out)
+		if err != nil {
+			log.Printf("Opus encode error: %v", err)
+			continue
+		}
+		packets = append(packets, out[:n])
 	}
-	return out[:n]
+	return packets
 }
