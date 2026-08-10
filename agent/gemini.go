@@ -207,6 +207,13 @@ func (g *GeminiLiveConn) handleIncoming() {
 			break
 		}
 
+		// Log raw message (truncate if too long, e.g. audio)
+		if len(message) > 500 {
+			log.Printf("Gemini Raw (truncated): %s...", string(message[:500]))
+		} else {
+			log.Printf("Gemini Raw: %s", string(message))
+		}
+
 		var resp GeminiResponse
 		if err := json.Unmarshal(message, &resp); err != nil {
 			log.Printf("Gemini: Failed to parse response: %v", err)
