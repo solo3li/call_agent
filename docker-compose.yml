@@ -132,6 +132,8 @@ services:
     container_name: cpaas-livekit-sip
     ports:
       - "20000-20100/udp"  # RTP for LiveKit SIP
+    volumes:
+      - ./livekit-sip.yaml:/sip/config.yaml:ro
     environment:
       LIVEKIT_URL: ws://livekit:7880
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}

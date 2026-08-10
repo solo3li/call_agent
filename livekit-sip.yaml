@@ -1,0 +1,9 @@
+api_key: devkey
+api_secret: livekit_secret_key_1234567890123
+ws_url: ws://livekit:7880
+sip:
+  port: 5060
+redis:
+  address: redis:6379
+logging:
+  level: debug
