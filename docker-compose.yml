@@ -208,7 +208,7 @@ services:
       LIVEKIT_URL: ws://livekit:7880
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
-      GO_AGENT_URL: http://go-agent:8080
+      AGENT_URL: http://go-agent:8080/worker/join
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
       Jwt__Key: ${JWT_SECRET:-super_secret_jwt_key_for_dev_only_32chars}
       Jwt__Issuer: cpaas-auth
