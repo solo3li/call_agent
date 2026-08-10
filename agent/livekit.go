@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 	"fmt"
 
@@ -44,16 +45,22 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 		},
 		ParticipantCallback: lksdk.ParticipantCallback{
 			OnTrackSubscribed: func(track *webrtc.TrackRemote, publication *lksdk.RemoteTrackPublication, rp *lksdk.RemoteParticipant) {
-				log.Printf("Track subscribed: %s", track.ID())
+				log.Printf("Track subscribed: %s, MimeType: %s", track.ID(), track.Codec().MimeType)
 				if track.Kind() == webrtc.RTPCodecTypeAudio {
 					go func() {
 						for {
 							rtpPacket, _, err := track.ReadRTP()
 							if err != nil {
 								log.Printf("Error reading RTP: %v", err)
-								break
+								return
 							}
-							bridge.DecodeIncomingRTP(rtpPacket.Payload)
+
+							mime := strings.ToLower(track.Codec().MimeType)
+							if strings.Contains(mime, "pcmu") {
+								bridge.DecodeIncomingPCMU(rtpPacket.Payload)
+							} else {
+								bridge.DecodeIncomingRTP(rtpPacket.Payload)
+							}
 						}
 					}()
 				}

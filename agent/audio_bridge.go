@@ -57,6 +57,47 @@ func (b *AudioBridge) DecodeIncomingRTP(payload []byte) {
 	}
 }
 
+func ulaw2linear(u byte) int16 {
+	u = ^u
+	sign := (u & 0x80)
+	exponent := (u >> 4) & 0x07
+	mantissa := u & 0x0f
+	sample := int16(mantissa) << 3
+	sample += 132
+	sample <<= exponent
+	sample -= 132
+	if sign != 0 {
+		sample = -sample
+	}
+	return sample
+}
+
+func (b *AudioBridge) DecodeIncomingPCMU(payload []byte) {
+	// PCMU is 8kHz, 1 byte per sample
+	pcm := make([]int16, len(payload))
+	for i, u := range payload {
+		pcm[i] = ulaw2linear(u)
+	}
+
+	// Upsample from 8kHz to 16kHz for Gemini (factor of 2)
+	upsampled := make([]int16, len(pcm)*2)
+	for i := 0; i < len(pcm); i++ {
+		upsampled[i*2] = pcm[i]
+		if i < len(pcm)-1 {
+			upsampled[i*2+1] = int16((int32(pcm[i]) + int32(pcm[i+1])) / 2)
+		} else {
+			upsampled[i*2+1] = pcm[i]
+		}
+	}
+
+	// Send to AI channel
+	select {
+	case b.PCMOut <- upsampled:
+	default:
+		// Drop frame if channel is full
+	}
+}
+
 func (b *AudioBridge) EncodeOutgoingPCM(pcm []int16) [][]byte {
 	// Upsample from 24kHz to 48kHz (factor of 2)
 	upsampled := make([]int16, len(pcm)*2)

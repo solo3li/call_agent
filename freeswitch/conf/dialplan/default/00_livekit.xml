@@ -4,12 +4,6 @@
       <!-- Log the call -->
       <action application="log" data="INFO Routing call to LiveKit SIP AI"/>
       
-      <!-- Ensure the call hangs up when the AI hangs up -->
-      <action application="set" data="hangup_after_bridge=true"/>
-      
-      <!-- Force Opus codec for LiveKit SIP -->
-      <action application="export" data="nolocal:absolute_codec_string=OPUS@48000h@20i@2c"/>
-      
       <!-- Bridge the call to the livekit-sip container -->
       <!-- Since it's in the same docker network, we can use the container name -->
       <action application="bridge" data="sofia/internal/9999@cpaas-livekit-sip:5060"/>
