@@ -44,6 +44,8 @@ spec:
       labels:
         app: cpaas-livekit
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: livekit
           image: {{ .Values.livekit.image }}
@@ -117,6 +119,8 @@ spec:
       labels:
         app: cpaas-livekit-sip
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: livekit-sip
           image: {{ .Values.livekitSip.image }}
