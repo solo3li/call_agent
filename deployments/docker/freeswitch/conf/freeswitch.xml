@@ -110,6 +110,15 @@
       </settings>
     </configuration>
 
+    <!-- xml_curl.conf - Dynamic configuration via HTTP -->
+    <configuration name="xml_curl.conf" description="cURL XML Gateway">
+      <bindings>
+        <binding name="directory">
+          <param name="gateway-url" value="${BACKEND_API_URL}/api/internal/fs-config" bindings="directory"/>
+        </binding>
+      </bindings>
+    </configuration>
+
     <!-- ACL — Restrict ESL to internal cluster only -->
     <configuration name="acl.conf" description="ACL">
       <network-lists>

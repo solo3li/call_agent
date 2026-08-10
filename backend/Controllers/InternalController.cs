@@ -294,9 +294,9 @@ namespace backend.Controllers
             return Ok(new { status = "ok", service = "cpaas-backend", timestamp = DateTime.UtcNow });
         }
 
-        [HttpGet("fs-config")]
+        [HttpPost("fs-config")]
         [Produces("application/xml")]
-        public async Task<IActionResult> GetFreeSwitchConfig([FromQuery] string section, [FromQuery] string user, [FromQuery] string domain)
+        public async Task<IActionResult> PostFreeSwitchConfig([FromForm] string section, [FromForm] string user, [FromForm] string domain)
         {
             if (section == "directory")
             {
