@@ -83,6 +83,25 @@ services:
       - web-net
 
   # ─────────────────────────────────────────────────────────────────────
+  # SIP PBX & MEDIA LAYER: FreeSWITCH + RTPEngine
+  # ─────────────────────────────────────────────────────────────────────
+
+  freeswitch:
+    image: safarov/freeswitch:latest
+    container_name: cpaas-freeswitch
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "5080:5080/udp"
+      - "5080:5080/tcp"
+      - "16384-16484:16384-16484/udp" # RTP Media
+    volumes:
+      - ./freeswitch/conf:/etc/freeswitch
+    networks:
+      - voip-net
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────
   # AI ENGINE LAYER: LiveKit Server + LiveKit SIP + Go Agent
   # ─────────────────────────────────────────────────────────────────────
 
@@ -112,8 +131,6 @@ services:
     image: livekit/sip:latest
     container_name: cpaas-livekit-sip
     ports:
-      - "5060:5060/udp"   # External SIP
-      - "5060:5060/tcp"
       - "20000-20100/udp"  # RTP for LiveKit SIP
     environment:
       LIVEKIT_URL: ws://livekit:7880
