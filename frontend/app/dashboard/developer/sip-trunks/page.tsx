@@ -18,7 +18,8 @@ export default function SipTrunksPage() {
           name: 'SIP Endpoint',
           username: s.extension,
           password: s.passwordEnc,
-          domain: '167.71.66.188',
+          domain: '167.71.66.188.nip.io',
+          port: '5080',
           status: 'Offline'
         })));
       }
@@ -60,12 +61,12 @@ export default function SipTrunksPage() {
     { key: 'name', header: 'Name' },
     { key: 'username', header: 'SIP Username' },
     { key: 'password', header: 'SIP Password' },
-    { key: 'domain', header: 'SIP Domain' },
+    { key: 'server', header: 'SIP Server' },
     { key: 'status', header: 'Status' },
     { key: 'actions', header: '' }
   ];
 
-  const rows = accounts.map(a => ({ ...a, actions: 'delete' }));
+  const rows = accounts.map(a => ({ ...a, server: `${a.domain}:${a.port}`, actions: 'delete' }));
 
   return (
     <Grid>
