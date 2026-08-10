@@ -34,7 +34,7 @@ export default function DashboardLayout({
   const devLinks = [
     { name: 'Overview', href: '/dashboard/developer' },
     { name: 'API Keys', href: '/dashboard/developer/api-keys' },
-    { name: 'SIP Trunks', href: '/dashboard/developer/sip-trunks' },
+
     { name: 'Webhooks', href: '/dashboard/developer/webhooks' },
   ];
 

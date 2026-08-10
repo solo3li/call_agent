@@ -57,15 +57,7 @@ livekitSip:
   enabled: true
   image: livekit/sip:latest
 
-# ─────────────────────────────────────────────
-# FreeSWITCH
-# ─────────────────────────────────────────────
-freeswitch:
-  enabled: true
-  image: call_agent-freeswitch:latest
-  imagePullPolicy: Never    # use local image built by docker compose
-  eslPassword: esl_dev_password
-  domain: "167.71.66.188.nip.io"
+
 
 # ─────────────────────────────────────────────
 # Go AI Agent

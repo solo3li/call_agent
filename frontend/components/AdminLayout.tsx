@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <SideNavLink renderIcon={Dashboard} as={Link} href="/dashboard/developer" isActive={pathname === '/dashboard/developer'}>Dashboard</SideNavLink>
               <SideNavLink renderIcon={UserSpeaker} as={Link} href="/dashboard/developer/agents" isActive={pathname.startsWith('/dashboard/developer/agents')}>AI Agents</SideNavLink>
               <SideNavLink renderIcon={Phone} as={Link} href="/dashboard/developer/telecom" isActive={pathname.startsWith('/dashboard/developer/telecom')}>Phone Numbers</SideNavLink>
-              <SideNavLink renderIcon={Workspace} as={Link} href="/dashboard/developer/sip-trunks" isActive={pathname.startsWith('/dashboard/developer/sip-trunks')}>SIP Trunks</SideNavLink>
+
               <SideNavLink renderIcon={Api} as={Link} href="/dashboard/developer/api-keys" isActive={pathname.startsWith('/dashboard/developer/api-keys')}>API Keys</SideNavLink>
               <SideNavLink renderIcon={Code} as={Link} href="/dashboard/developer/webhooks" isActive={pathname.startsWith('/dashboard/developer/webhooks')}>Webhooks</SideNavLink>
             </>

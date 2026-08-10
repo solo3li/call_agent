@@ -42,13 +42,7 @@ spec:
                 secretKeyRef:
                   name: cpaas-secrets
                   key: GEMINI_API_KEY
-            - name: FREESWITCH_ESL_HOST
-              value: "cpaas-freeswitch:8021"
-            - name: FREESWITCH_ESL_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: cpaas-secrets
-                  key: ESL_PASSWORD
+
             - name: BACKEND_API_URL
               value: "http://cpaas-backend:8080"
             - name: INTERNAL_API_KEY
