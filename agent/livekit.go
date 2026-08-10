@@ -18,7 +18,7 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 	outTrack, err := lksdk.NewLocalSampleTrack(webrtc.RTPCodecCapability{
 		MimeType:  webrtc.MimeTypeOpus,
 		ClockRate: 48000,
-		Channels:  1,
+		Channels:  2,
 	})
 	if err != nil {
 		log.Fatalf("Could not create local track: %v", err)
