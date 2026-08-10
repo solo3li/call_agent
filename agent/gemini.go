@@ -96,7 +96,7 @@ func ConnectToGeminiLive(apiKey string, systemPrompt string, bridge *AudioBridge
 func buildGeminiSetupMessage(systemPrompt string) map[string]interface{} {
 	return map[string]interface{}{
 		"setup": map[string]interface{}{
-			"model": "models/gemini-2.0-flash-exp",
+			"model": "models/gemini-3.1-flash-live-preview",
 			"generationConfig": map[string]interface{}{
 				"responseModalities": []string{"AUDIO"},
 				"speechConfig": map[string]interface{}{
