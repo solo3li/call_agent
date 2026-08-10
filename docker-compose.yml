@@ -25,7 +25,6 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  freeswitch_logs:
 
 services:
 
@@ -84,84 +83,6 @@ services:
       - web-net
 
   # ─────────────────────────────────────────────────────────────────────
-  # VOIP EDGE LAYER: OpenSIPS + rtpengine
-  # ─────────────────────────────────────────────────────────────────────
-
-  rtpengine:
-    image: drachtio/rtpengine:latest
-    container_name: cpaas-rtpengine
-    # hostNetwork equivalent for local dev: expose all needed ports
-    network_mode: host    # Required for proper RTP media handling
-    command: >
-      rtpengine
-      --interface=lo
-      --listen-ng=127.0.0.1:22222
-      --port-min=20000
-      --port-max=20500
-      --log-level=5
-      --log-stderr=true
-      --foreground=true
-    cap_add:
-      - NET_ADMIN
-
-  opensips:
-    image: opensips/opensips:3.5
-    container_name: cpaas-opensips
-    ports:
-      - "5060:5060/udp"
-      - "5060:5060/tcp"
-      - "8888:8888/tcp"    # Management interface
-    environment:
-      OPENSIPS_DB_HOST: postgres
-      OPENSIPS_DB_PASS: ${POSTGRES_PASSWORD:-cpaas_dev_pass}
-    volumes:
-      - ./deployments/docker/opensips/opensips.cfg:/etc/opensips/opensips.cfg:ro
-      - ./deployments/docker/opensips/dispatcher.list:/etc/opensips/dispatcher.list:ro
-    networks:
-      - voip-net
-    depends_on:
-      - rtpengine
-      - freeswitch
-    restart: unless-stopped
-
-  # ─────────────────────────────────────────────────────────────────────
-  # VOIP CORE LAYER: FreeSWITCH
-  # ─────────────────────────────────────────────────────────────────────
-
-  freeswitch:
-    build:
-      context: ./deployments/docker/freeswitch
-      dockerfile: Dockerfile
-    container_name: cpaas-freeswitch
-    ports:
-      - "5080:5080/udp"   # External SIP profile (receives from OpenSIPS)
-      - "5080:5080/tcp"
-      - "5090:5060/udp"   # Internal SIP profile
-      - "8021:8021/tcp"   # ESL
-      - "16384-16484:16384-16484/udp"  # RTP media (small range for dev)
-    environment:
-      BACKEND_API_URL: http://backend:8080
-      ESL_PASSWORD: ${ESL_PASSWORD:-esl_dev_password}
-      FREESWITCH_DOMAIN: freeswitch.local
-      SIP_TRUNK_HOST: ${SIP_TRUNK_HOST:-sip.trunk.example.com}
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
-      EXT_SIP_IP: ${EXT_SIP_IP:-127.0.0.1}
-    volumes:
-      - freeswitch_logs:/var/log/freeswitch
-    networks:
-      - voip-net
-      - web-net
-    depends_on:
-      - redis
-      - backend
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "fs_cli", "-x", "status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ─────────────────────────────────────────────────────────────────────
   # AI ENGINE LAYER: LiveKit Server + LiveKit SIP + Go Agent
   # ─────────────────────────────────────────────────────────────────────
 
@@ -191,8 +112,8 @@ services:
     image: livekit/sip:latest
     container_name: cpaas-livekit-sip
     ports:
-      - "5062:5060/udp"   # SIP from FreeSWITCH
-      - "5062:5060/tcp"
+      - "5060:5060/udp"   # External SIP
+      - "5060:5060/tcp"
       - "20000-20100/udp"  # RTP for LiveKit SIP
     environment:
       LIVEKIT_URL: ws://livekit:7880
@@ -236,8 +157,6 @@ services:
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
       AI_API_KEY: ${Google__ApiKey:-AQ.Ab8RN6IcYXc8ArNRAhWiYfv3IFBW1-3FfFDSXSk1Ld3eVkNDiA}
-      FREESWITCH_ESL_HOST: freeswitch:8021
-      FREESWITCH_ESL_PASS: ${ESL_PASSWORD:-esl_dev_password}
       BACKEND_API_URL: http://backend:8080
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
       PORT: 8080
@@ -246,7 +165,6 @@ services:
       - web-net
     depends_on:
       - livekit
-      - freeswitch
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
@@ -273,9 +191,6 @@ services:
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-livekit_secret_key_1234567890123}
       GO_AGENT_URL: http://go-agent:8080
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev_internal_key}
-      FreeSWITCH__Host: freeswitch
-      FreeSWITCH__Port: 8021
-      FreeSWITCH__Password: ${ESL_PASSWORD:-esl_dev_password}
       Jwt__Key: ${JWT_SECRET:-super_secret_jwt_key_for_dev_only_32chars}
       Jwt__Issuer: cpaas-auth
       Jwt__Audience: cpaas-frontend

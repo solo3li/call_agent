@@ -332,8 +332,8 @@ func (g *GeminiLiveConn) handleFunctionCall(name string, args map[string]interfa
 
 	case "end_call":
 		log.Printf("Gemini: Ending call for room %s", g.session.RoomName)
-		if g.session.ESLClient != nil && g.session.FreeSwitchUUID != "" {
-			go g.session.ESLClient.HangupCall(g.session.FreeSwitchUUID, "NORMAL_CLEARING")
+		if g.session.Disconnect != nil {
+			g.session.Disconnect()
 		}
 		return "call_ended"
 

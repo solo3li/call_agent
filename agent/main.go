@@ -84,8 +84,7 @@ func main() {
 	lkKey := os.Getenv("LIVEKIT_API_KEY")
 	lkSecret := os.Getenv("LIVEKIT_API_SECRET")
 	aiKey := os.Getenv("AI_API_KEY")
-	eslHost := os.Getenv("FREESWITCH_ESL_HOST") // e.g. freeswitch-svc.voip-core.svc.cluster.local:8021
-	eslPass := os.Getenv("FREESWITCH_ESL_PASS")
+
 	backendURL := os.Getenv("BACKEND_API_URL")
 
 	if lkUrl == "" || aiKey == "" {
@@ -94,7 +93,7 @@ func main() {
 
 	log.Printf("CPaaS AI Agent starting...")
 	log.Printf("  LiveKit: %s", lkUrl)
-	log.Printf("  ESL Host: %s", eslHost)
+
 	log.Printf("  Backend: %s", backendURL)
 
 	// ---- HTTP Routes ----
@@ -138,15 +137,7 @@ func main() {
 			session.FreeSwitchUUID = req.Metadata["freeswitch_uuid"]
 		}
 
-		// Connect to FreeSWITCH ESL for call control
-		if eslHost != "" && req.Metadata["freeswitch_uuid"] != "" {
-			eslClient, err := NewESLClient(eslHost, eslPass)
-			if err != nil {
-				log.Printf("Agent: ESL connection failed (non-fatal): %v", err)
-			} else {
-				session.ESLClient = eslClient
-			}
-		}
+
 
 		// Track active session
 		activeSessions.Store(req.RoomName, session)
@@ -248,9 +239,7 @@ func runCallSession(
 		sessionCount--
 		sessionMu.Unlock()
 
-		if session.ESLClient != nil {
-			session.ESLClient.Close()
-		}
+
 
 		// Report CDR for billing
 		if backendURL != "" {
