@@ -111,18 +111,21 @@ namespace backend.Controllers
             var currentSchema = _tenantProvider.GetCurrentSchema();
             var currentTenantId = _tenantProvider.GetCurrentTenantId();
 
-            if (string.IsNullOrEmpty(currentSchema) || currentSchema == "public")
+            var user = await _tenantDb.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            
+            // If user not found in the current tenant, they might belong to another tenant
+            if (user == null)
             {
-                // Find tenant by querying all schemas
                 var tenants = await _sharedDb.Tenants.ToListAsync();
                 foreach (var t in tenants)
                 {
+                    if (t.SchemaName == currentSchema) continue; // Already checked
+
                     try
                     {
-                        // Use raw ADO.NET to check if user exists in this schema
                         using (var command = _sharedDb.Database.GetDbConnection().CreateCommand())
                         {
-                            command.CommandText = $"SELECT COUNT(1) FROM \"{t.SchemaName}\".\"Users\" WHERE \"Email\" = @email";
+                            command.CommandText = $"SELECT \"Id\", \"Email\", \"PasswordHash\" FROM \"{t.SchemaName}\".\"Users\" WHERE \"Email\" = @email LIMIT 1";
                             var param = command.CreateParameter();
                             param.ParameterName = "@email";
                             param.Value = dto.Email;
@@ -131,13 +134,21 @@ namespace backend.Controllers
                             if (command.Connection.State != System.Data.ConnectionState.Open)
                                 await command.Connection.OpenAsync();
 
-                            var result = await command.ExecuteScalarAsync();
-                            if (result != null && Convert.ToInt32(result) > 0)
+                            using (var reader = await command.ExecuteReaderAsync())
                             {
-                                _tenantProvider.SetTenantInfo(t.SchemaName, t.Id);
-                                currentSchema = t.SchemaName;
-                                currentTenantId = t.Id;
-                                break;
+                                if (await reader.ReadAsync())
+                                {
+                                    user = new User
+                                    {
+                                        Id = reader.GetGuid(0),
+                                        Email = reader.GetString(1),
+                                        PasswordHash = reader.GetString(2)
+                                    };
+                                    _tenantProvider.SetTenantInfo(t.SchemaName, t.Id);
+                                    currentSchema = t.SchemaName;
+                                    currentTenantId = t.Id;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -146,15 +157,8 @@ namespace backend.Controllers
                         // Ignore schemas that might not have Users table yet
                     }
                 }
-
-                if (string.IsNullOrEmpty(currentSchema) || currentSchema == "public")
-                {
-                    return Unauthorized(new { message = "Invalid email or password" });
-                }
             }
 
-            var user = await _tenantDb.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-            
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             {
                 return Unauthorized(new { message = "Invalid email or password" });
