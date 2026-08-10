@@ -120,6 +120,8 @@ func ConnectToLiveKit(url, apiKey, apiSecret, roomName string, bridge *AudioBrid
 					if err != nil {
 						log.Printf("Error writing sample: %v", err)
 					}
+					// Pace the transmission to avoid flooding the UDP socket
+					time.Sleep(20 * time.Millisecond)
 				}
 			}
 		}
